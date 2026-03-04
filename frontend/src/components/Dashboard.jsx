@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, ScanLine, FileText, Calendar,
     Settings, LogOut, Bell, Search, ChevronDown,
     TrendingUp, Clock, CheckCircle, AlertCircle
 } from 'lucide-react';
+import { useAuth } from '../AuthContext';
 
 const NAV = [
     { icon: LayoutDashboard, label: 'Dashboard', active: true },
@@ -39,6 +40,21 @@ const STATUS_COLORS = {
 
 export default function Dashboard() {
     const [activeNav, setActiveNav] = useState('Dashboard');
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    // Derive display values from the authenticated user
+    const fullName = user ? `${user.first_name} ${user.last_name}` : 'User';
+    const initials = user ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase() : 'U';
+    const roleLabel = user?.role === 'doctor'
+        ? (user.profile?.specialty || 'Doctor')
+        : 'Patient';
+    const displayTitle = user?.role === 'doctor' ? `Dr. ${user.last_name}` : fullName;
+
+    const handleSignOut = () => {
+        logout();
+        navigate('/');
+    };
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--c-bg)' }}>
@@ -104,27 +120,29 @@ export default function Dashboard() {
                             background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '0.75rem', fontWeight: 700, color: '#fff', flexShrink: 0,
-                        }}>DS</div>
+                        }}>{initials}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '0.83rem', fontWeight: 500, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Dr. D. Smith</div>
-                            <div style={{ fontSize: '0.73rem', color: 'var(--c-text-3)' }}>Radiologist</div>
+                            <div style={{ fontSize: '0.83rem', fontWeight: 500, color: 'var(--c-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {user?.role === 'doctor' ? `Dr. ${user.first_name} ${user.last_name}` : fullName}
+                            </div>
+                            <div style={{ fontSize: '0.73rem', color: 'var(--c-text-3)' }}>{roleLabel}</div>
                         </div>
                         <ChevronDown size={14} color="var(--c-text-3)" />
                     </div>
-                    <Link to="/">
-                        <button style={{
+                    <button
+                        onClick={handleSignOut}
+                        style={{
                             width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                             padding: '8px 10px', border: 'none', borderRadius: 6,
                             background: 'transparent', color: 'var(--c-text-3)',
                             fontFamily: 'inherit', fontSize: '0.82rem',
                             cursor: 'pointer', transition: 'all 0.12s',
                         }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-surface-2)'; e.currentTarget.style.color = 'var(--c-text)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-text-3)'; }}
-                        >
-                            <LogOut size={14} /> Sign out
-                        </button>
-                    </Link>
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--c-surface-2)'; e.currentTarget.style.color = 'var(--c-text)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-text-3)'; }}
+                    >
+                        <LogOut size={14} /> Sign out
+                    </button>
                 </div>
             </aside>
 
@@ -151,7 +169,7 @@ export default function Dashboard() {
                         <button style={{ background: 'none', border: '1px solid var(--c-border)', borderRadius: 'var(--radius-sm)', padding: '7px', display: 'flex', cursor: 'pointer', color: 'var(--c-text-2)' }}>
                             <Bell size={16} />
                         </button>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>DS</div>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>{initials}</div>
                     </div>
                 </header>
 
@@ -162,7 +180,9 @@ export default function Dashboard() {
                         {/* Page header */}
                         <div style={{ marginBottom: 28 }}>
                             <h1 style={{ fontSize: '1.35rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4 }}>Dashboard</h1>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--c-text-2)' }}>Sunday, 1 March 2026 — Welcome back, Dr. Smith.</p>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--c-text-2)' }}>
+                                {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} — Welcome back, {displayTitle}.
+                            </p>
                         </div>
 
                         {/* Stats grid */}

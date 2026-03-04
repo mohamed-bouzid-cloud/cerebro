@@ -2,11 +2,35 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../AuthContext';
 
 export default function Login() {
     const [role, setRole] = useState('doctor');
     const [showPass, setShowPass] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSubmitting(true);
+        try {
+            await login(email, password);
+            navigate('/dashboard');
+        } catch (err) {
+            const msg =
+                err.response?.data?.non_field_errors?.[0] ||
+                err.response?.data?.detail ||
+                'Invalid email or password.';
+            setError(msg);
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '100vh' }}>
@@ -95,32 +119,70 @@ export default function Login() {
                         ))}
                     </div>
 
-                    {/* Fields */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
-                        <div>
-                            <label>Email address</label>
-                            <input className="input" type="email" placeholder={role === 'doctor' ? 'doctor@hospital.org' : 'patient@email.com'} />
+                    {/* Error message */}
+                    {error && (
+                        <div style={{
+                            background: 'rgba(239,68,68,0.1)',
+                            border: '1px solid rgba(239,68,68,0.3)',
+                            borderRadius: 6,
+                            padding: '10px 14px',
+                            marginBottom: 16,
+                            fontSize: '0.84rem',
+                            color: '#ef4444',
+                        }}>
+                            {error}
                         </div>
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                <label style={{ margin: 0 }}>Password</label>
-                                <span style={{ fontSize: '0.78rem', color: 'var(--c-text-3)', cursor: 'pointer' }}>Forgot password?</span>
-                            </div>
-                            <div style={{ position: 'relative' }}>
-                                <input className="input" type={showPass ? 'text' : 'password'} placeholder="••••••••" style={{ paddingRight: 40 }} />
-                                <button
-                                    onClick={() => setShowPass(v => !v)}
-                                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text-3)', display: 'flex' }}
-                                >
-                                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    )}
 
-                    <button className="btn btn-primary" style={{ width: '100%', padding: '11px', fontSize: '0.92rem' }}>
-                        Sign in
-                    </button>
+                    {/* Fields */}
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+                            <div>
+                                <label>Email address</label>
+                                <input
+                                    className="input"
+                                    type="email"
+                                    placeholder={role === 'doctor' ? 'doctor@hospital.org' : 'patient@email.com'}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <label style={{ margin: 0 }}>Password</label>
+                                    <span style={{ fontSize: '0.78rem', color: 'var(--c-text-3)', cursor: 'pointer' }}>Forgot password?</span>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        className="input"
+                                        type={showPass ? 'text' : 'password'}
+                                        placeholder="••••••••"
+                                        style={{ paddingRight: 40 }}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPass(v => !v)}
+                                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text-3)', display: 'flex' }}
+                                    >
+                                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={submitting}
+                            style={{ width: '100%', padding: '11px', fontSize: '0.92rem', opacity: submitting ? 0.7 : 1 }}
+                        >
+                            {submitting ? 'Signing in…' : 'Sign in'}
+                        </button>
+                    </form>
 
                     <p style={{ marginTop: 24, textAlign: 'center', fontSize: '0.84rem', color: 'var(--c-text-3)' }}>
                         Don't have an account?{' '}
