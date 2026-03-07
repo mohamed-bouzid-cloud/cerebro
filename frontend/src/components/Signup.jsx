@@ -41,14 +41,21 @@ export default function Signup() {
                 payload.specialty = specialty;
                 payload.license_number = licenseNumber;
             }
+            console.log('Submitting payload:', payload);
             await signup(payload);
-            navigate('/dashboard');
+            // Redirect based on role
+            navigate(role === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard');
         } catch (err) {
+            console.error('Registration error:', err);
             const data = err.response?.data;
             if (data) {
                 // Collect all field errors into a single message
                 const messages = Object.values(data).flat();
-                setError(messages.join(' '));
+                const errorMsg = messages.join(' ');
+                console.error('Validation errors:', errorMsg);
+                setError(errorMsg);
+            } else if (err.message) {
+                setError(err.message);
             } else {
                 setError('Registration failed. Please try again.');
             }

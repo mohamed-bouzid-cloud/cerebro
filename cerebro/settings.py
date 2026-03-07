@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # ASGI server for WebSocket support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'channels',
     # Local
     'accounts',
 ]
@@ -74,7 +76,18 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'cerebro.asgi.application'
 WSGI_APPLICATION = 'cerebro.wsgi.application'
+
+# Channels configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
+
+# WebSocket settings
+WS_ACCEPT_ALL = False
 
 
 # Database
@@ -155,4 +168,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:5176",
 ]
+
+CORS_ALLOW_CREDENTIALS = True

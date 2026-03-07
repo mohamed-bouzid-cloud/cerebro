@@ -19,8 +19,9 @@ export default function Login() {
         setError('');
         setSubmitting(true);
         try {
-            await login(email, password);
-            navigate('/dashboard');
+            const user = await login(email, password);
+            // Redirect based on user's actual role
+            navigate(user.role === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard');
         } catch (err) {
             const msg =
                 err.response?.data?.non_field_errors?.[0] ||

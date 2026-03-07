@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, allowedRoles = [] }) {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -19,6 +19,13 @@ export default function ProtectedRoute({ children }) {
 
     if (!user) {
         return <Navigate to="/login" replace />;
+    }
+
+    // Check if user has an allowed role
+    if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+        // Redirect to the user's dashboard based on their role
+        const redirectPath = user.role === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard';
+        return <Navigate to={redirectPath} replace />;
     }
 
     return children;
