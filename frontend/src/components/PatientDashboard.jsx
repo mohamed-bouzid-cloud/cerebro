@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
-import DicomViewer from './DicomViewer';
+// import DicomViewer from './DicomViewer';
 
 const PatientDashboard = () => {
     const { user, logout } = useAuth();
@@ -812,10 +812,12 @@ const PatientDashboard = () => {
 
             {/* Dicom Viewer Modal */}
             {selectedDicomStudy && (
+                {/* 
                 <DicomViewer
                     studyId={selectedDicomStudy}
                     onClose={() => setSelectedDicomStudy(null)}
                 />
+                */}
             )}
 
             {/* Consultation Modal */}

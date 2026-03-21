@@ -1,44 +1,68 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Download, X } from 'lucide-react';
-import axios from 'axios';
+import { ZoomIn, ZoomOut, RotateCcw, X, Layers, Sun, MousePointer2 } from 'lucide-react';
 import cornerstone from 'cornerstone-core';
+import cornerstoneMath from 'cornerstone-math';
+import cornerstoneTools from 'cornerstone-tools';
 import dicomParser from 'dicom-parser';
 import cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader';
+import Hammer from 'hammerjs';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-// --- CONFIGURATION CORNERSTONE ---
+// --- CONFIGURATION CORNERSTONE & TOOLS ---
+cornerstoneTools.external.cornerstone = cornerstone;
+cornerstoneTools.external.Hammer = Hammer;
+cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
+
 cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
 cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-
 cornerstoneWADOImageLoader.configure({
-    beforeSend: function (xhr) {
-        // Optionnel : ajouter des headers si nécessaire
-    }
+    beforeSend: function (xhr) { }
 });
 
-const DicomViewer = ({ studyId, onClose }) => {
-    const [images, setImages] = useState([]);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [zoom, setZoom] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [rotation, setRotation] = useState(0);
-    const viewerRef = useRef(null);
+// Initialize cornerstone tools
+cornerstoneTools.init({
+    showSVGCursors: true,
+    globalToolSyncEnabled: true,
+});
 
-    // 1. Charger les vraies images depuis Django
+const DicomViewer = ({ onClose }) => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const queryParams = new URLSearchParams(location.search);
+    const studyId = queryParams.get('study_id');
+
+    const [images, setImages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [currentSlice, setCurrentSlice] = useState(1);
+    const [totalSlices, setTotalSlices] = useState(0);
+    const [activeTool, setActiveTool] = useState('Wwwc'); // Window Width/Level by default
+    const viewerRef = useRef(null);
+    const stackRef = useRef(null);
+
+    // 1. Fetch real images
     useEffect(() => {
         const fetchDicomImages = async () => {
+            if (!studyId) {
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             try {
-                // On appelle ton API que nous avons créée à l'étape 2
-                const res = await axios.get('http://localhost:8000/viewer/api/list/');
-                const dicomData = res.data.dicom_urls.map((url, index) => ({
-                    id: index,
-                    url: `wadouri:${url}`, // Préfixe indispensable pour les fichiers .IMA
-                    instanceNumber: index + 1
-                }));
-                setImages(dicomData);
+                const token = localStorage.getItem('access_token');
+                const headers = { Authorization: `Bearer ${token}` };
+                
+                // Fetch the list of DICOM files from the server
+                const res = await fetch(`http://localhost:8000/viewer/api/list/?study_id=${studyId}`, { headers });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    const dicomUrls = data.dicom_urls.map(url => `wadouri:${url}`);
+                    setImages(dicomUrls);
+                    setTotalSlices(dicomUrls.length);
+                }
             } catch (error) {
-                console.error('Erreur lors de la récupération des DICOMs:', error);
+                console.error('Error fetching DICOMs:', error);
             } finally {
                 setLoading(false);
             }
@@ -47,46 +71,80 @@ const DicomViewer = ({ studyId, onClose }) => {
         fetchDicomImages();
     }, []);
 
-    // 2. Affichage de l'image avec Cornerstone
+    // 2. Initialize Cornerstone Viewer & Stack
     useEffect(() => {
-        if (viewerRef.current && images.length > 0) {
-            const element = viewerRef.current;
+        if (!viewerRef.current || images.length === 0) return;
 
-            // Activer l'élément s'il ne l'est pas déjà
-            try {
-                cornerstone.getEnabledElement(element);
-            } catch (e) {
-                cornerstone.enable(element);
-            }
+        const element = viewerRef.current;
+        cornerstone.enable(element);
 
-            const currentImage = images[currentImageIndex].url;
+        const stack = {
+            currentImageIdIndex: 0,
+            imageIds: images,
+        };
+        stackRef.current = stack;
 
-            cornerstone.loadImage(currentImage).then(image => {
-                cornerstone.displayImage(element, image);
+        // Load the first image
+        cornerstone.loadAndCacheImage(images[0]).then(image => {
+            cornerstone.displayImage(element, image);
 
-                // Appliquer les transformations (Zoom / Rotation)
-                const viewport = cornerstone.getViewport(element);
-                viewport.scale = zoom;
-                viewport.rotation = rotation;
-                cornerstone.setViewport(element, viewport);
-            }).catch(err => {
-                console.error("Erreur d'affichage Cornerstone:", err);
+            // Add Stack State Manager
+            cornerstoneTools.addStackStateManager(element, ['stack']);
+            cornerstoneTools.addToolState(element, 'stack', stack);
+
+            // Add Tools
+            const WwwcTool = cornerstoneTools.WwwcTool;
+            const PanTool = cornerstoneTools.PanTool;
+            const ZoomTool = cornerstoneTools.ZoomTool;
+            const StackScrollMouseWheelTool = cornerstoneTools.StackScrollMouseWheelTool;
+
+            cornerstoneTools.addTool(WwwcTool);
+            cornerstoneTools.addTool(PanTool);
+            cornerstoneTools.addTool(ZoomTool);
+            cornerstoneTools.addTool(StackScrollMouseWheelTool);
+
+            // Set Active Tools
+            cornerstoneTools.setToolActive('Wwwc', { mouseButtonMask: 1 }); // Left Click = Window Level
+            cornerstoneTools.setToolActive('Pan', { mouseButtonMask: 2 });  // Right Click = Pan
+            cornerstoneTools.setToolActive('Zoom', { mouseButtonMask: 4 }); // Middle Click = Zoom
+            cornerstoneTools.setToolActive('StackScrollMouseWheel', { });   // Scroll = Scroll Stack
+
+            // Track slice changes to update UI
+            element.addEventListener('cornerstonenewimage', (e) => {
+                const currentIndex = stackRef.current.currentImageIdIndex;
+                setCurrentSlice(currentIndex + 1);
             });
-        }
-    }, [images, currentImageIndex, zoom, rotation]);
 
-    // --- HANDLERS ---
-    const nextImage = () => currentImageIndex < images.length - 1 && setCurrentImageIndex(currentImageIndex + 1);
-    const prevImage = () => currentImageIndex > 0 && setCurrentImageIndex(currentImageIndex - 1);
-    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
-    const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.5));
-    const handleRotate = () => setRotation(prev => (prev + 90) % 360);
-    const handleReset = () => { setZoom(1); setRotation(0); };
+        }).catch(err => {
+            console.error("Cornerstone setup error:", err);
+        });
+
+        return () => {
+            cornerstone.disable(element);
+        };
+    }, [images]);
+
+    // Handle manual tool switching
+    const setTool = (toolName) => {
+        // Deactivate old primary tool
+        cornerstoneTools.setToolPassive(activeTool);
+        
+        // Activate new primary tool on left click
+        cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 });
+        setActiveTool(toolName);
+    };
+
+    const handleReset = () => {
+        if (viewerRef.current) {
+            cornerstone.reset(viewerRef.current);
+        }
+    };
 
     if (loading) {
         return (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[2000]">
-                <div className="text-white text-lg animate-pulse">Chargement des images DICOM...</div>
+            <div className="fixed inset-0 bg-[#0a0f14]/90 backdrop-blur-sm flex flex-col items-center justify-center z-[2000]">
+                <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                <div className="text-white font-medium animate-pulse">Initializing Volumetric Viewer...</div>
             </div>
         );
     }
@@ -94,85 +152,111 @@ const DicomViewer = ({ studyId, onClose }) => {
     return (
         <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black flex flex-col z-[2000]"
+            className="fixed inset-0 bg-[#0a0f14] flex flex-col z-[2000] font-sans"
         >
             {/* Header */}
-            <div className="bg-gray-900 border-b border-white/10 p-4 flex justify-between items-center px-8">
-                <div>
-                    <h2 className="text-white text-xl font-semibold">Cerebro DICOM Viewer</h2>
-                    <p className="text-gray-400 text-sm">Fichiers .IMA détectés : {images.length}</p>
+            <header className="bg-[#121820] border-b border-[#1f2937] p-4 flex justify-between items-center px-6">
+                <div className="flex items-center gap-4">
+                    <div className="bg-blue-600/20 p-2 rounded-lg text-blue-400">
+                        <Layers size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-white text-lg font-bold tracking-tight">Cerebro Integrated Viewer</h2>
+                        <p className="text-gray-400 text-xs font-mono">Database ID: {studyId || 'ANONYMIZED_SERIES'}</p>
+                    </div>
                 </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-                    <X size={28} />
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold"
+                >
+                    Back to Portal
+                    <X size={20} />
                 </button>
-            </div>
+            </header>
 
             {/* Main Content */}
             <div className="flex-1 flex overflow-hidden">
+                
+                {/* Sidebar Tools */}
+                <aside className="w-72 bg-[#121820] border-r border-[#1f2937] flex flex-col p-6">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6">Interaction Tools</h3>
+
+                    <div className="space-y-2 mb-8">
+                        <button 
+                            onClick={() => setTool('Wwwc')}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all font-medium text-sm
+                                ${activeTool === 'Wwwc' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-[#0a0f14] text-gray-400 border border-[#1f2937] hover:border-gray-600 hover:text-gray-200'}`}
+                        >
+                            <Sun size={18} /> Window/Level (WW/WL)
+                        </button>
+                        <button 
+                            onClick={() => setTool('Pan')}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all font-medium text-sm
+                                ${activeTool === 'Pan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-[#0a0f14] text-gray-400 border border-[#1f2937] hover:border-gray-600 hover:text-gray-200'}`}
+                        >
+                            <MousePointer2 size={18} /> Pan Image
+                        </button>
+                        <button 
+                            onClick={() => setTool('Zoom')}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all font-medium text-sm
+                                ${activeTool === 'Zoom' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-[#0a0f14] text-gray-400 border border-[#1f2937] hover:border-gray-600 hover:text-gray-200'}`}
+                        >
+                            <ZoomIn size={18} /> Zoom
+                        </button>
+                        
+                        <div className="pt-2">
+                            <button 
+                                onClick={handleReset} 
+                                className="w-full flex items-center gap-3 bg-[#0a0f14] border border-[#1f2937] text-gray-400 p-3 rounded-xl hover:bg-gray-800 hover:text-white transition-all text-sm font-medium"
+                            >
+                                <RotateCcw size={18} /> Reset Viewers
+                            </button>
+                        </div>
+                    </div>
+
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Volume Navigation</h3>
+                    <div className="bg-[#0a0f14] border border-[#1f2937] p-5 rounded-xl text-center shadow-inner">
+                        <div className="text-gray-500 text-xs uppercase mb-1 font-semibold tracking-wide">Current Slice</div>
+                        <div className="text-3xl font-bold font-mono text-white mb-2">
+                            <span className="text-blue-400">{currentSlice}</span>
+                            <span className="text-gray-600"> / {totalSlices}</span>
+                        </div>
+                        <p className="text-xs text-gray-500">Scroll anywhere on the image to navigate through the slices.</p>
+                    </div>
+
+                    <div className="mt-auto pt-6 border-t border-[#1f2937]">
+                        <p className="text-gray-600 text-[10px] text-center font-mono uppercase tracking-widest">
+                            Diagnostic Use Warning<br/>Not intended for primary diagnosis.
+                        </p>
+                    </div>
+                </aside>
+
                 {/* Viewer Zone */}
-                <div className="flex-1 relative flex items-center justify-center bg-[#0a0a0f] p-4">
+                <main className="flex-1 relative flex items-center justify-center bg-black overflow-hidden p-6 group">
                     {images.length > 0 ? (
-                        <div className="relative w-full h-full flex items-center justify-center">
-                            {/* CANVA CORNERSTONE */}
+                        <div className="relative w-full h-full max-w-5xl rounded-2xl overflow-hidden border border-[#2a364a] mx-auto shadow-2xl">
+                            {/* CORNERSTONE CANVAS CONTAINER */}
                             <div
                                 ref={viewerRef}
-                                className="w-full h-full max-w-[800px] max-h-[800px] border border-white/10 shadow-2xl"
-                                onWheel={(e) => e.deltaY < 0 ? handleZoomIn() : handleZoomOut()} // Zoom à la molette
+                                className="w-full h-full bg-black"
+                                onContextMenu={(e) => e.preventDefault()} // Disable native right-click menu
                             />
-
-                            {/* Nav Buttons Overlay */}
-                            <div className="absolute inset-x-4 flex justify-between pointer-events-none">
-                                <button onClick={prevImage} className="pointer-events-auto bg-blue-600/60 hover:bg-blue-600 p-3 rounded-full text-white transition-all">
-                                    <ChevronLeft size={30} />
-                                </button>
-                                <button onClick={nextImage} className="pointer-events-auto bg-blue-600/60 hover:bg-blue-600 p-3 rounded-full text-white transition-all">
-                                    <ChevronRight size={30} />
-                                </button>
+                            
+                            {/* Overlay Info */}
+                            <div className="absolute top-4 right-4 pointer-events-none text-emerald-400 font-mono text-xs opacity-70 group-hover:opacity-100 transition-opacity drop-shadow-md text-right">
+                                <p>Cerebro StackScroll Tool Active</p>
+                                <p className="text-white mt-1">Right-Click: Pan | Scroll: Slice</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="text-gray-500 font-medium text-lg">Aucune image .IMA trouvée dans media/s/</div>
+                        <div className="text-center py-12 bg-[#121820] rounded-2xl border border-dashed border-[#2a364a] px-24">
+                            <Layers size={48} className="mx-auto text-gray-600 mb-4" />
+                            <p className="text-gray-400 font-medium">No volumetric data found in source.</p>
+                            <p className="text-gray-600 text-sm mt-2">Ensure the DICOM series is linked to the current study.</p>
+                        </div>
                     )}
-                </div>
+                </main>
 
-                {/* Sidebar Tools */}
-                <div className="w-80 bg-gray-900/50 border-l border-white/10 flex flex-col p-6">
-                    <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-6">Outils d'analyse</p>
-
-                    <div className="grid grid-cols-2 gap-3 mb-8">
-                        <button onClick={handleZoomIn} className="flex items-center justify-center gap-2 bg-blue-600/20 border border-blue-500/30 text-blue-400 p-3 rounded-lg hover:bg-blue-600/30 transition-all text-sm">
-                            <ZoomIn size={18} /> Zoom +
-                        </button>
-                        <button onClick={handleZoomOut} className="flex items-center justify-center gap-2 bg-blue-600/20 border border-blue-500/30 text-blue-400 p-3 rounded-lg hover:bg-blue-600/30 transition-all text-sm">
-                            <ZoomOut size={18} /> Zoom -
-                        </button>
-                        <button onClick={handleRotate} className="flex items-center justify-center gap-2 bg-gray-800 border border-white/10 text-white p-3 rounded-lg hover:bg-gray-700 transition-all text-sm">
-                            <RotateCcw size={18} /> Pivoter
-                        </button>
-                        <button onClick={handleReset} className="flex items-center justify-center bg-gray-800 border border-white/10 text-white p-3 rounded-lg hover:bg-gray-700 transition-all text-sm">
-                            Réinitialiser
-                        </button>
-                    </div>
-
-                    <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-2">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Image</span>
-                            <span className="text-blue-400 font-mono">{currentImageIndex + 1} / {images.length}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Zoom</span>
-                            <span className="text-blue-400 font-mono">{zoom.toFixed(1)}x</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Rotation</span>
-                            <span className="text-blue-400 font-mono">{rotation}°</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-auto pt-6">
-                        <p className="text-gray-500 text-[10px] text-center italic">Plateforme Cerebro - Usage Médical Uniquement</p>
-                    </div>
-                </div>
             </div>
         </motion.div>
     );

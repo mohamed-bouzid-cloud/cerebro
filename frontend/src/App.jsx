@@ -7,10 +7,10 @@ import Signup from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import PatientDashboard from './components/PatientDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
-// 1. Importation du composant Viewer
-import DicomViewer from './components/DicomViewer';
+import DoctorPatientPortal from './components/DoctorPatientPortal';
 import DicomPage from './components/DicomPage';
-
+// 1. Importation du composant Viewer
+// import DicomViewer from './components/DicomViewer';
 function AppRoutes() {
   const { user, loading } = useAuth();
 
@@ -37,7 +37,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 2. Route dédiée au viewer DICOM pleine page */}
+      <Route path="/doctor/patient/:id" element={
+        <ProtectedRoute allowedRoles={['doctor']}>
+          <DoctorPatientPortal />
+        </ProtectedRoute>
+      } />
+
       <Route path="/doctor/dicom-viewer" element={
         <ProtectedRoute allowedRoles={['doctor']}>
           <DicomPage />

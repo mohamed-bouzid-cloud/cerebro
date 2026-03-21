@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import list_dicoms, analyze_dicom
+from . import views
 
 urlpatterns = [
-    path('list/',    list_dicoms,    name='dicom-list'),
-    path('analyze/', analyze_dicom,  name='dicom-analyze'),
+    path('slice/', views.serve_slice, name='serve_slice'),
+    path('segment/', views.segment_volume, name='segment_volume'),
 ]
