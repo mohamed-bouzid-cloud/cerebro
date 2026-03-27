@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
+<<<<<<< HEAD
   
 
 
+=======
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
 
 const ConsultationModal = ({ isOpen, onClose, doctorId, doctorName, onSuccess }) => {
     const [formData, setFormData] = useState({

@@ -6,9 +6,17 @@ django-cors-headers>=4.3
 channels>=4.0
 daphne>=4.0
 # FHIR Support
+<<<<<<< HEAD
 fhir>=5.0
 # Medical Imaging
 pydicom>=2.4
+=======
+fhir.resources
+# Medical Imaging
+pydicom>=2.4
+Pillow>=10.0
+numpy>=1.24
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
 # HL7 Messaging
 hl7>=0.4
 # Server

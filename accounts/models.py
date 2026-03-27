@@ -461,7 +461,12 @@ class DICOMStudy(models.Model):
     performing_physician = models.CharField(max_length=255, blank=True)
     
     # File handling
+<<<<<<< HEAD
     file_path = models.FileField(upload_to='dicom_studies/%Y/%m/')
+=======
+    file_path = models.FileField(upload_to='dicom_studies/%Y/%m/', null=True, blank=True)
+    local_folder_path = models.CharField(max_length=500, blank=True, help_text="Local pathway to DICOM folder on the doctor's machine")
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
     file_size_mb = models.FloatField(default=0)  # Size in MB
     number_of_images = models.IntegerField(default=1)
     

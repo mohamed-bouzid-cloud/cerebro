@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+<<<<<<< HEAD
+=======
+import os
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,9 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     # Third-party
     'corsheaders',
     'rest_framework',
+=======
+    'dicom_viewer',
+    # Third-party
+    'rest_framework',
+    'corsheaders',
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
     'rest_framework_simplejwt',
     'channels',
     # Local
@@ -174,3 +185,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+<<<<<<< HEAD
+=======
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868

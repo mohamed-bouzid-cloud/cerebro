@@ -739,6 +739,103 @@ class DICOMStudyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(pending, many=True)
         return Response(serializer.data)
 
+<<<<<<< HEAD
+=======
+    @action(detail=False, methods=['post'], url_path='upload-local')
+    def upload_local(self, request):
+        """Upload a DICOM study from a local folder path on the doctor's machine."""
+        folder_path = request.data.get('folder_path')
+        patient_id = request.data.get('patient_id')
+        print(f"DEBUG: upload_local called for patient_id={patient_id}, path={folder_path}")
+        
+        if not folder_path or not patient_id:
+            return Response({"error": "folder_path and patient_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            patient = User.objects.get(id=patient_id, role="patient")
+        except User.DoesNotExist:
+            print(f"DEBUG: Patient not found for ID {patient_id}")
+            return Response({"error": "Patient not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+        import os
+        # Cleanup quotes and normalize the path for the current OS
+        if folder_path:
+            folder_path = folder_path.strip('"\'').strip()
+            folder_path = os.path.normpath(folder_path)
+        
+        if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
+            print(f"DEBUG: Directory not found or invalid: {folder_path}")
+            return Response({"error": f"Directory not found or invalid: {folder_path}"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Try to read the first DICOM to extract metadata
+        try:
+            import pydicom
+            from datetime import datetime
+            
+            # RECURSIVE SEARCH for DICOM files
+            all_dicom_files = []
+            for root, dirs, files in os.walk(folder_path):
+                for f in files:
+                    if f.lower().endswith('.ima') or f.lower().endswith('.dcm'):
+                        all_dicom_files.append(os.path.join(root, f))
+            
+            if not all_dicom_files:
+                print(f"DEBUG: No DICOM files found recursively in {folder_path}")
+                return Response({"error": f"No .IMA or .dcm files found anywhere inside: {folder_path}"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Sort files to get a consistent representative file
+            all_dicom_files.sort()
+            example_file = all_dicom_files[0]
+            print(f"DEBUG: Found {len(all_dicom_files)} files. Reading header from {example_file}")
+            
+            # Use force=True to read files without DICOM preamble
+            ds = pydicom.dcmread(example_file, stop_before_pixels=True, force=True)
+            
+            # Get Study UID or Fallback
+            study_uid = getattr(ds, 'StudyInstanceUID', None)
+            if not study_uid:
+                # If no Study UID, use the folder name + timestamp to group them
+                study_uid = f"LOCAL.{os.path.basename(folder_path)}.{int(datetime.now().timestamp())}"
+            
+            modality = getattr(ds, 'Modality', 'OT')
+            body_part = getattr(ds, 'BodyPartExamined', 'Unknown')
+            
+            study_date_str = getattr(ds, 'StudyDate', '')
+            if study_date_str and len(study_date_str) == 8:
+                try:
+                    study_date = datetime.strptime(study_date_str, '%Y%m%d').date()
+                except:
+                    study_date = datetime.now().date()
+            else:
+                study_date = datetime.now().date()
+                
+            # Create the record mapped to the local path
+            # We use update_or_create to avoid duplicate study ID crashes if they re-import
+            study, created = DICOMStudy.objects.update_or_create(
+                study_id=study_uid,
+                defaults={
+                    'patient': patient,
+                    'ordering_doctor': request.user,
+                    'modality': modality,
+                    'body_part': body_part,
+                    'study_date': study_date,
+                    'local_folder_path': folder_path,
+                    'number_of_images': len(all_dicom_files),
+                    'institution_name': getattr(ds, 'InstitutionName', 'Local Workstation'),
+                    'status': 'completed'
+                }
+            )
+            
+            msg = "Local study linked." if created else "Local study updated."
+            print(f"DEBUG: {msg} ID {study.id} (UID: {study_uid})")
+            return Response({"message": msg, "study_id": study.id}, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": f"Internal server error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
 
 class DICOMSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     """View DICOM series within a study."""

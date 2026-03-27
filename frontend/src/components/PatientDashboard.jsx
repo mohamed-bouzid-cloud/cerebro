@@ -6,7 +6,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import DicomViewer from './DicomViewer';
+=======
+// import DicomViewer from './DicomViewer';
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
 
 const PatientDashboard = () => {
     const { user, logout } = useAuth();
@@ -812,10 +816,18 @@ const PatientDashboard = () => {
 
             {/* Dicom Viewer Modal */}
             {selectedDicomStudy && (
+<<<<<<< HEAD
+=======
+                {/* 
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
                 <DicomViewer
                     studyId={selectedDicomStudy}
                     onClose={() => setSelectedDicomStudy(null)}
                 />
+<<<<<<< HEAD
+=======
+                */}
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
             )}
 
             {/* Consultation Modal */}

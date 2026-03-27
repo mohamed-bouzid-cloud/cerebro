@@ -12,8 +12,20 @@
   },
   "dependencies": {
     "axios": "^1.13.6",
+<<<<<<< HEAD
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
+=======
+    "cornerstone-core": "^2.6.1",
+    "cornerstone-math": "^0.1.10",
+    "cornerstone-tools": "^6.0.10",
+    "cornerstone-wado-image-loader": "^4.13.2",
+    "dicom-parser": "^1.8.21",
+    "framer-motion": "^12.34.3",
+    "hammerjs": "^2.0.8",
+    "lucide-react": "^0.575.0",
+    "pako": "^2.1.0",
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1"
@@ -33,4 +45,8 @@
   "overrides": {
     "vite": "^8.0.0-beta.13"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> dcc8718832808e12203694ff91ad11bc675c1868
