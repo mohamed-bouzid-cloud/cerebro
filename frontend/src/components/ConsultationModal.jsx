@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
+  
+
+
 
 const ConsultationModal = ({ isOpen, onClose, doctorId, doctorName, onSuccess }) => {
     const [formData, setFormData] = useState({
