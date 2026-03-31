@@ -193,8 +193,9 @@ const DicomPage = () => {
     }, [currentBase64, zoom, pan, currentIndex, maskCache, currentSeriesId]);
 
     // 5. Intelligent AI Orchestrator
-    const runIntelligentSegmentation = async (x, y, w, h) => {
+    const runIntelligentSegmentation = async (dicomX, dicomY) => {
         if (isSegmenting || !studyId || !currentSeriesId) return;
+
         setIsSegmenting(true);
 
         try {
@@ -208,10 +209,8 @@ const DicomPage = () => {
                     study_id: studyId,
                     series_id: currentSeriesId,
                     slice_idx: currentIndex,
-                    x: Math.round(x),
-                    y: Math.round(y),
-                    canvas_width: Math.round(w),
-                    canvas_height: Math.round(h)
+                    dicom_x: dicomX,
+                    dicom_y: dicomY
                 })
             });
 
@@ -228,7 +227,8 @@ const DicomPage = () => {
                     newCache[sid] = {
                         data: decompressed,
                         shape: maskInfo.shape,
-                        confidence: maskInfo.confidence
+                        confidence: maskInfo.confidence,
+                        volume_cm3: maskInfo.volume_cm3
                     };
                 } catch (e) {
                     console.error(`Failed to decompress mask for series ${sid}:`, e);
@@ -266,7 +266,48 @@ const DicomPage = () => {
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
             
-            runIntelligentSegmentation(clickX, clickY, rect.width, rect.height);
+            // 1. Calculate the true rendered dimension of the canvas inside the letterbox (object-contain)
+            const containScale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+            const drawnWidth = canvas.width * containScale;
+            const drawnHeight = canvas.height * containScale;
+            
+            const offsetX = (rect.width - drawnWidth) / 2;
+            const offsetY = (rect.height - drawnHeight) / 2;
+            
+            // Map DOM click to internal Canvas resolution by stripping the black letterbox bars
+            const drawnClickX = clickX - offsetX;
+            const drawnClickY = clickY - offsetY;
+            
+            const internalX = (drawnClickX / drawnWidth) * canvas.width;
+            const internalY = (drawnClickY / drawnHeight) * canvas.height;
+            
+            
+            // 1. Calculate the base scale that the rendering engine uses
+            const scaleBase = Math.min(canvas.width / sliceDimensions.width, canvas.height / sliceDimensions.height);
+            const totalScale = scaleBase * zoom;
+
+            // 2. Undo translation (Canvas center + pan)
+            const relativeX = internalX - (canvas.width / 2 + pan.x);
+            const relativeY = internalY - (canvas.height / 2 + pan.y);
+
+            // 3. Undo scale
+            const unscaledX = relativeX / totalScale;
+            const unscaledY = relativeY / totalScale;
+
+            // 4. Undo the image offset (-img.width/2 by ctx.drawImage)
+            const dicomX = Math.round(unscaledX + (sliceDimensions.width / 2));
+            const dicomY = Math.round(unscaledY + (sliceDimensions.height / 2));
+
+            console.log(`Screen Click [${clickX}, ${clickY}] -> Internal [${internalX}, ${internalY}] -> Dicom [${dicomX}, ${dicomY}]`);
+
+            // Validate if click is inside actual image
+            if (dicomX < 0 || dicomX >= sliceDimensions.width || dicomY < 0 || dicomY >= sliceDimensions.height) {
+                console.warn("Click was outside the medical image bounds.");
+                alert("Please click inside the medical scan area.");
+                return;
+            }
+            
+            runIntelligentSegmentation(dicomX, dicomY);
             return;
         }
 
@@ -427,9 +468,9 @@ const DicomPage = () => {
                                 </div>
                                 
                                 <div className="flex justify-between items-center text-xs">
-                                    <span className="text-white/50 font-mono uppercase tracking-wider">Accuracy (IoU)</span>
+                                    <span className="text-white/50 font-mono uppercase tracking-wider">Organ Volume</span>
                                     <span className="text-blue-400 font-bold font-mono">
-                                        {maskCache[currentSeriesId].confidence ? `${(maskCache[currentSeriesId].confidence * 0.98).toFixed(1)}%` : 'N/A'}
+                                        {maskCache[currentSeriesId].volume_cm3 ? `${maskCache[currentSeriesId].volume_cm3.toFixed(1)} cm³` : 'N/A'}
                                     </span>
                                 </div>
                                 

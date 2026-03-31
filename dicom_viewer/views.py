@@ -217,11 +217,11 @@ def segment_volume(request):
     study_id = data.get('study_id')
     series_id = str(data.get('series_id', '')).strip().strip('\0').rstrip('.')
     slice_idx = data.get('slice_idx')
-    click_x = data.get('x')
-    click_y = data.get('y')
-    _log(f"DEBUG: segment_volume click at ({click_x}, {click_y}) on slice {slice_idx}")
+    dicom_x = data.get('dicom_x')
+    dicom_y = data.get('dicom_y')
+    _log(f"DEBUG: segment_volume dicom_click at ({dicom_x}, {dicom_y}) on slice {slice_idx}")
 
-    if not all([study_id, series_id, slice_idx is not None, click_x is not None, click_y is not None]):
+    if not all([study_id, series_id, slice_idx is not None, dicom_x is not None, dicom_y is not None]):
         return JsonResponse({"error": "Missing parameters"}, status=400)
 
     try:
@@ -240,13 +240,12 @@ def segment_volume(request):
 
         from .segment_all import run_segment_all
         
-        canvas_width = data.get('canvas_width')
-        canvas_height = data.get('canvas_height')
-
-        masks = run_segment_all(study, series_id, slice_idx, click_x, click_y, canvas_width, canvas_height, all_series_data)
+        masks, confidence, accuracy = run_segment_all(study, series_id, slice_idx, dicom_x, dicom_y, all_series_data)
         
-        return JsonResponse({"masks": masks})
+        return JsonResponse({"masks": masks, "confidence": confidence, "accuracy": accuracy})
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        return JsonResponse({"error": str(e)}, status=500)
+        err_str = traceback.format_exc()
+        _log(f"\nCRITICAL ERROR in segment_volume:\n{err_str}")
+        print(err_str)
+        return JsonResponse({"error": str(e), "traceback": err_str}, status=500)
