@@ -15,6 +15,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['cornerstone-wado-image-loader', 'cornerstone-core', 'dicom-parser']
+<<<<<<< HEAD
   },
   server: {
     proxy: {
@@ -24,5 +25,7 @@ export default defineConfig({
         secure: false,
       }
     }
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
   }
 })

@@ -251,6 +251,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'scheduled_at': event.get('scheduled_at'),
             'minutes_until': event.get('minutes_until')
         }))
+<<<<<<< HEAD
 
 
 class WaitingRoomConsumer(AsyncWebsocketConsumer):
@@ -297,3 +298,5 @@ class WaitingRoomConsumer(AsyncWebsocketConsumer):
             'timestamp': event.get('timestamp')
         }))
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550

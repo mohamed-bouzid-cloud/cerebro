@@ -417,6 +417,7 @@ export const mockVitals = [
         subject: { reference: 'Patient/PATIENT-001' },
         effectiveDateTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
         valueQuantity: { value: 72, unit: 'beats/min' }
+<<<<<<< HEAD
     },
     {
         id: 'VITAL-003',
@@ -497,6 +498,8 @@ export const mockVitals = [
         subject: { reference: 'Patient/PATIENT-003' },
         effectiveDateTime: new Date().toISOString(),
         valueQuantity: { value: 92, unit: '%' }
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     }
 ];
 
@@ -504,6 +507,7 @@ export const mockVitals = [
 export const generateMockFHIRBundle = (patientId) => {
     const patientData = mockPatients.find(p => p.id === patientId) || mockPatients[0];
     
+<<<<<<< HEAD
     // Generate a set of dynamic vitals if they don't exist
     const dynamicVitals = [
         {
@@ -544,6 +548,8 @@ export const generateMockFHIRBundle = (patientId) => {
         }
     ];
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     return {
         resourceType: 'Bundle',
         type: 'searchset',
@@ -564,7 +570,10 @@ export const generateMockFHIRBundle = (patientId) => {
                 .map(med => ({ resource: med })),
             ...mockAllergies.filter(a => a.patient.reference.includes(patientId))
                 .map(allergy => ({ resource: allergy })),
+<<<<<<< HEAD
             ...dynamicVitals,
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             ...mockVitals.filter(v => v.subject.reference.includes(patientId))
                 .map(vital => ({ resource: vital }))
         ]

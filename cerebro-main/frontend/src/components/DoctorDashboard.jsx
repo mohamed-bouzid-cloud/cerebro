@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { motion, AnimatePresence } from 'framer-motion';
+=======
+import { motion } from 'framer-motion';
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import {
     Users, Activity, FileText, Calendar, LogOut, ChevronRight, Search,
     Bell, Stethoscope, Clock, ShieldCheck, ChevronDown, AlertCircle,
+<<<<<<< HEAD
     Pill, Heart, Droplet, TrendingUp, X, Plus, Wifi, WifiOff, Edit2,
     Microscope, CheckCircle2, RefreshCw, Thermometer, MoreVertical
+=======
+    Pill, Heart, Droplet, TrendingUp, X, Plus, Wifi, WifiOff
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 } from 'lucide-react';
 import { mockPatients, generateMockAppointments, generateMockFHIRBundle, generateMockTriageScores, generateMockConsultationNotes, generateMockPrescriptions, generateMockTimelineEvents, generateMockConsultationRequests } from '../mockData';
 import AppointmentCalendar from './AppointmentCalendar';
@@ -16,12 +24,15 @@ import ConsultationNotesForm from './ConsultationNotesForm';
 import FollowUpScheduling from './FollowUpScheduling';
 import EPrescriptionForm from './EPrescriptionForm';
 import PatientHistoryTimeline from './PatientHistoryTimeline';
+<<<<<<< HEAD
 import WaitingRoomQueue from './WaitingRoomQueue';
 import AvailabilityManager from './AvailabilityManager';
 import AppointmentModal from './AppointmentModal';
 import LabCenterPanel from './DoctorDashboard/LabCenterPanel';
 import AddPatientModal from './DoctorDashboard/AddPatientModal';
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 const DoctorDashboard = () => {
     const { user, logout } = useAuth();
@@ -39,16 +50,23 @@ const DoctorDashboard = () => {
     const [appointments, setAppointments] = useState(generateMockAppointments());
     const [patientAppointments, setPatientAppointments] = useState([]);
     const [consultationRequests, setConsultationRequests] = useState(generateMockConsultationRequests());
+<<<<<<< HEAD
     const [waitingRoom, setWaitingRoom] = useState([]);
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     // Assignment UI
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [assignLoading, setAssignLoading] = useState(false);
+<<<<<<< HEAD
     const [showBookingModal, setShowBookingModal] = useState(false);
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     // Panel Expansion State
     const [expandedConsultations, setExpandedConsultations] = useState(true);
     const [expandedAppointments, setExpandedAppointments] = useState(true);
+<<<<<<< HEAD
     const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, calendar, availability, patients
     const [utilityModal, setUtilityModal] = useState(null); // reports, broadcast, inventory
 
@@ -63,6 +81,8 @@ const DoctorDashboard = () => {
         { id: 0, message: 'Welcome to Cerebro v2.0 Node.', target: 'All Staff', timestamp: new Date(Date.now() - 3600000).toISOString() }
     ]);
     const [analyticsRange, setAnalyticsRange] = useState('7d');
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     // Mock Data Mode - default to true, will be set to false if real API responds
     const [mockMode, setMockMode] = useState(true);
@@ -202,9 +222,15 @@ const DoctorDashboard = () => {
     const fetchConsultationRequests = async () => {
         try {
             const token = localStorage.getItem('access_token');
+<<<<<<< HEAD
             // Fetch incoming consultation requests
             const response = await fetch(
                 'http://localhost:8000/api/auth/consultations/',
+=======
+            // Fetch incoming consultation requests (status: proposed, requested)
+            const response = await fetch(
+                'http://localhost:8000/api/auth/appointments/incoming_consultations/',
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (response.ok) {
@@ -227,6 +253,7 @@ const DoctorDashboard = () => {
     const fetchPatientClinicalData = async (patientId) => {
         setClinicalLoading(true);
         try {
+<<<<<<< HEAD
             // Generate mock FHIR data for patient (FHIR endpoints not yet implemented on backend)
             // In the future, these can be replaced with real FHIR API endpoints
             const mockBundle = generateMockFHIRBundle(patientId);
@@ -242,6 +269,61 @@ const DoctorDashboard = () => {
 
             setSelectedPatientDetails(data);
             setMockMode(true);
+=======
+            const token = localStorage.getItem('access_token');
+            const headers = { Authorization: `Bearer ${token}` };
+
+            // Fetch FHIR clinical bundle for patient
+            const clinicalEndpoints = [
+                `http://localhost:8000/api/fhir/Patient/${patientId}/`,
+                `http://localhost:8000/api/fhir/Condition/?patient=${patientId}`,
+                `http://localhost:8000/api/fhir/MedicationRequest/?patient=${patientId}`,
+                `http://localhost:8000/api/fhir/AllergyIntolerance/?patient=${patientId}`,
+                `http://localhost:8000/api/fhir/Observation/?patient=${patientId}`,
+                `http://localhost:8000/api/fhir/DiagnosticReport/?patient=${patientId}`
+            ];
+
+            const responses = await Promise.allSettled(
+                clinicalEndpoints.map(url => fetch(url, { headers }))
+            );
+
+            let hasRealData = false;
+            const data = {
+                patient: null,
+                conditions: [],
+                medications: [],
+                allergies: [],
+                observations: [],
+                diagnosticReports: []
+            };
+
+            for (let i = 0; i < responses.length; i++) {
+                if (responses[i].status === 'fulfilled' && responses[i].value.ok) {
+                    const json = await responses[i].value.json();
+                    hasRealData = true;
+                    if (i === 0) data.patient = json;
+                    else if (i === 1) data.conditions = json.entry || json.results || [];
+                    else if (i === 2) data.medications = json.entry || json.results || [];
+                    else if (i === 3) data.allergies = json.entry || json.results || [];
+                    else if (i === 4) data.observations = json.entry || json.results || [];
+                    else if (i === 5) data.diagnosticReports = json.entry || json.results || [];
+                }
+            }
+
+            // If no real FHIR data, use mock data
+            if (!hasRealData) {
+                const mockBundle = generateMockFHIRBundle(patientId);
+                data.patient = mockBundle.entry?.[0]?.resource || null;
+                data.conditions = mockBundle.entry?.filter(e => e.resource?.resourceType === 'Condition') || [];
+                data.medications = mockBundle.entry?.filter(e => e.resource?.resourceType === 'MedicationRequest') || [];
+                data.allergies = mockBundle.entry?.filter(e => e.resource?.resourceType === 'AllergyIntolerance') || [];
+                data.observations = mockBundle.entry?.filter(e => e.resource?.resourceType === 'Observation') || [];
+                setMockMode(true);
+            }
+
+            setSelectedPatientDetails(data);
+
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             // Filter appointments for this specific patient from doctor's appointments
             // Use appointments that were already fetched by fetchAppointments()
             const patientApts = appointments.filter(apt =>
@@ -315,7 +397,11 @@ const DoctorDashboard = () => {
         try {
             const token = localStorage.getItem('access_token');
             const response = await fetch(
+<<<<<<< HEAD
                 `http://localhost:8000/api/auth/consultations/${consultationId}/accept/`,
+=======
+                `http://localhost:8000/api/auth/appointments/${consultationId}/accept_consultation/`,
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` }
@@ -323,6 +409,7 @@ const DoctorDashboard = () => {
             );
 
             if (response.ok) {
+<<<<<<< HEAD
                 const acceptResult = await response.json();
                 
                 // Find the consultation to move it
@@ -376,6 +463,26 @@ const DoctorDashboard = () => {
                         });
                         console.log('New patient added:', patientData.patient.first_name, patientData.patient.last_name);
                     }
+=======
+                alert('Consultation accepted!');
+
+                // Wait a moment for backend to process
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Fetch ALL updated patients (including manually assigned + appointment-linked)
+                const patientsRes = await fetch('http://localhost:8000/api/auth/patients/', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (patientsRes.ok) {
+                    const updatedPatients = await patientsRes.json();
+                    const patientList = Array.isArray(updatedPatients) ? updatedPatients : [];
+                    // Replace with complete list from backend
+                    setPatients(patientList);
+                    console.log('Patients updated:', patientList.length, 'patients');
+                } else {
+                    console.error('Failed to fetch updated patients');
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 }
 
                 // Refresh consultations list
@@ -384,6 +491,7 @@ const DoctorDashboard = () => {
                 const errorData = await response.json().catch(() => ({}));
                 const errorMsg = errorData.error || errorData.detail || 'Failed to accept consultation';
                 console.error('Accept consultation error:', response.status, errorMsg);
+<<<<<<< HEAD
                 
                 // FALLBACK: Move patient locally even if API fails (for demo/mock consistency)
                 const acceptedReq = consultationRequests.find(r => r.id === consultationId);
@@ -420,6 +528,13 @@ const DoctorDashboard = () => {
             }
             
             alert('Consultation accepted directly! Patient moved to Waiting Room (Demo).');
+=======
+                alert(`Error: ${errorMsg}`);
+            }
+        } catch (error) {
+            console.error('Failed to accept consultation:', error);
+            alert('Error accepting consultation: ' + error.message);
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         }
     };
 
@@ -427,7 +542,11 @@ const DoctorDashboard = () => {
         try {
             const token = localStorage.getItem('access_token');
             const response = await fetch(
+<<<<<<< HEAD
                 `http://localhost:8000/api/auth/consultations/${consultationId}/reject/`,
+=======
+                `http://localhost:8000/api/auth/appointments/${consultationId}/reject_consultation/`,
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` }
@@ -436,7 +555,10 @@ const DoctorDashboard = () => {
 
             if (response.ok) {
                 alert('Consultation declined');
+<<<<<<< HEAD
                 setConsultationRequests(prev => prev.filter(r => r.id !== consultationId));
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 // Refresh consultations list
                 await fetchConsultationRequests();
             } else {
@@ -444,6 +566,7 @@ const DoctorDashboard = () => {
             }
         } catch (error) {
             console.error('Failed to reject consultation:', error);
+<<<<<<< HEAD
             alert('Consultation declined locally.');
             setConsultationRequests(prev => prev.filter(r => r.id !== consultationId));
         }
@@ -513,6 +636,12 @@ const DoctorDashboard = () => {
 
 
 
+=======
+            alert('Error declining consultation');
+        }
+    };
+
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     const handleLogout = () => {
         logout();
         navigate('/');
@@ -528,11 +657,18 @@ const DoctorDashboard = () => {
     }
 
     return (
+<<<<<<< HEAD
         <div className="flex h-screen text-gray-200 overflow-hidden font-sans relative premium-depth-bg">
 
 
             {/* Sidebar / Patient List */}
             <aside className="w-80 bg-[#070b14]/95 backdrop-blur-xl border-r border-white/5 flex flex-col h-full shrink-0 relative z-10 shadow-[20px_0_40px_rgba(0,0,0,0.5)]">
+=======
+        <div className="flex h-screen bg-[#0a0f14] text-gray-200 overflow-hidden font-sans">
+
+            {/* Sidebar / Patient List */}
+            <aside className="w-80 bg-[#121820] border-r border-[#1f2937] flex flex-col h-full shrink-0">
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 <div className="p-6 border-b border-[#1f2937]">
                     <div className="flex items-center gap-3 text-white font-bold text-xl mb-6">
                         <div className="bg-blue-600 p-2 rounded-lg">
@@ -552,6 +688,7 @@ const DoctorDashboard = () => {
                         />
                     </div>
 
+<<<<<<< HEAD
                     <div className="flex flex-col gap-2">
                         <button
                             onClick={() => setShowAssignModal(true)}
@@ -571,6 +708,15 @@ const DoctorDashboard = () => {
                             REGISTER WALK-IN
                         </button>
                     </div>
+=======
+                    <button
+                        onClick={() => setShowAssignModal(true)}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium text-sm transition-colors"
+                    >
+                        <Plus size={16} />
+                        Add Patient
+                    </button>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
@@ -581,8 +727,13 @@ const DoctorDashboard = () => {
                                 key={patient.id}
                                 onClick={() => handlePatientSelect(patient)}
                                 className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border ${selectedPatient?.id === patient.id
+<<<<<<< HEAD
                                         ? 'bg-blue-500/10 border-blue-500/30'
                                         : 'hover:bg-white/5 border-transparent hover:border-white/10'
+=======
+                                        ? 'bg-[#1a2332] border-[#2a364a]'
+                                        : 'hover:bg-[#1a2332] border-transparent hover:border-[#2a364a]'
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -623,6 +774,7 @@ const DoctorDashboard = () => {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col h-full overflow-y-auto">
                 {/* Top Nav */}
+<<<<<<< HEAD
                 <header className="h-24 px-8 flex flex-col justify-center border-b border-[#1f2937] bg-[#0a0f14]/80 backdrop-blur-md sticky top-0 z-20">
                     <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-4">
@@ -662,12 +814,43 @@ const DoctorDashboard = () => {
                                     <div className="font-bold text-white">Dr. {user?.first_name}</div>
                                     <div className="text-blue-400 opacity-70">Neurologist</div>
                                 </div>
+=======
+                <header className="h-20 px-8 flex items-center justify-between border-b border-[#1f2937] bg-[#0a0f14]/80 backdrop-blur-md sticky top-0 z-10">
+                    <div className="flex items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Welcome, Dr. {user?.last_name || 'Doctor'}</h1>
+                            <p className="text-sm text-gray-400 mt-1">Here is the summary of your clinical practice.</p>
+                        </div>
+                        {mockMode && (
+                            <div className="ml-4 flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
+                                <WifiOff size={14} className="text-yellow-500" />
+                                <span className="text-xs font-medium text-yellow-500">Demo Mode</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={fetchAppointments}
+                            className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-[#1a2332]"
+                        >
+                            <Bell size={20} />
+                            {appointments.length > 0 && (
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-blue-500 border-2 border-[#0a0f14] rounded-full animate-pulse"></span>
+                            )}
+                        </button>
+                        <div className="flex items-center gap-3 pl-4 border-l border-[#1f2937]">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 shadow-lg" />
+                            <div className="hidden md:block">
+                                <div className="text-sm font-semibold text-white">Dr. {user?.first_name} {user?.last_name}</div>
+                                <div className="text-xs text-blue-400">{user?.role || 'Neurologist'}</div>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                             </div>
                         </div>
                     </div>
                 </header>
 
                 {/* Dashboard Content */}
+<<<<<<< HEAD
                 <div className="p-8 w-full">
                     <AnimatePresence mode="wait">
                         {activeTab === 'dashboard' && (
@@ -1213,11 +1396,161 @@ const UtilityDashboardOverlay = ({
                     <button onClick={onClose} className="px-8 py-2.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black text-white hover:bg-white/10 transition-all uppercase tracking-[0.2em] shadow-lg">Close Module</button>
                 </div>
             </motion.div>
+=======
+                <div className="p-8 max-w-6xl w-full">
+
+                    {/* Insights Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {[
+                            { label: 'Assigned Patients', value: patients.length, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+                            { label: 'Pending Studies', value: stats.studies, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+                            { label: 'Appointments Today', value: appointments.length || '4', icon: Calendar, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+                            { label: 'Security Status', value: 'Secure', icon: ShieldCheck, color: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/20' }
+                        ].map((stat, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className={`bg-[#121820] border ${stat.border} rounded-2xl p-6 relative overflow-hidden group`}
+                            >
+                                <div className="flex justify-between items-start relative z-10">
+                                    <div>
+                                        <p className="text-gray-400 font-medium text-sm mb-1">{stat.label}</p>
+                                        <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
+                                    </div>
+                                    <div className={`${stat.bg} ${stat.color} p-3 rounded-xl`}>
+                                        <stat.icon size={24} />
+                                    </div>
+                                </div>
+                                <div className={`absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform ${stat.color}`}>
+                                    <stat.icon size={100} />
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Clinical Dashboard or Welcome */}
+                    {selectedPatient ? (
+                        <>
+                            <ClinicalDashboard
+                                patient={selectedPatient}
+                                details={selectedPatientDetails}
+                                loading={clinicalLoading}
+                                appointments={patientAppointments}
+                                consultationRequests={consultationRequests}
+                                onAcceptConsultation={handleAcceptConsultation}
+                                onRejectConsultation={handleRejectConsultation}
+                                mockTriageScores={mockTriageScores}
+                                mockConsultationNotes={mockConsultationNotes}
+                                mockPrescriptions={mockPrescriptions}
+                                mockTimelineEvents={mockTimelineEvents}
+                                mockAppointments={mockAppointments}
+                                onClose={() => {
+                                    setSelectedPatient(null);
+                                    setSelectedPatientDetails(null);
+                                    setPatientAppointments([]);
+                                }}
+                            />
+                            {/* Assignment Modal */}
+                            {showAssignModal && (
+                                <AssignPatientModal
+                                    availablePatients={availablePatients}
+                                    assignedPatients={patients}
+                                    onAssign={handleAssignPatient}
+                                    onClose={() => setShowAssignModal(false)}
+                                    loading={assignLoading}
+                                />
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            {/* Incoming Consultations Section */}
+                            <div className="mb-8">
+                                <IncomingConsultationsPanel
+                                    requests={consultationRequests || []}
+                                    expanded={expandedConsultations}
+                                    onToggle={() => setExpandedConsultations(!expandedConsultations)}
+                                    onAccept={handleAcceptConsultation}
+                                    onReject={handleRejectConsultation}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                {/* Quick Start Card */}
+                                <div className="lg:col-span-2 bg-gradient-to-br from-[#121820] to-[#1a2332] border border-[#2a364a] rounded-2xl p-8 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
+
+                                    <h2 className="text-2xl font-bold text-white mb-2 relative z-10">Select a patient to begin</h2>
+                                    <p className="text-gray-400 mb-8 max-w-lg relative z-10">
+                                        Click on any patient from the left sidebar to access their secure clinical portal. From there, you can view their medical history, conditions, medications, allergies, and lab results powered by FHIR clinical data.
+                                    </p>
+
+                                    <div className="grid sm:grid-cols-2 gap-4 relative z-10">
+                                        <div className="bg-black/30 border border-white/5 rounded-xl p-5 flex items-start gap-4">
+                                            <div className="bg-blue-500/20 p-2.5 rounded-lg text-blue-400">
+                                                <FileText size={20} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-white font-medium mb-1">Clinical Records</h4>
+                                                <p className="text-xs text-gray-500 leading-relaxed">Access FHIR-powered patient conditions, medications, and allergies.</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-black/30 border border-white/5 rounded-xl p-5 flex items-start gap-4">
+                                            <div className="bg-emerald-500/20 p-2.5 rounded-lg text-emerald-400">
+                                                <Activity size={20} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-white font-medium mb-1">Vital Signs & Labs</h4>
+                                                <p className="text-xs text-gray-500 leading-relaxed">View latest observations and diagnostic results in real-time.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Appointments Mini-Feed */}
+                                <div className="bg-[#121820] border border-[#1f2937] rounded-2xl p-6">
+                                    <h3 className="font-bold text-white mb-6">Upcoming Appointments</h3>
+                                    <div className="space-y-4">
+                                        {appointments.length > 0 ? (
+                                            appointments.slice(0, 4).map((apt, idx) => (
+                                                <div key={idx} className="flex gap-3 pb-4 border-b border-[#1f2937] last:border-0">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-medium text-gray-200">Appointment {idx + 1}</p>
+                                                        <p className="text-xs text-gray-500 mt-1">Status: {apt?.status || 'Scheduled'}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-500 text-center py-8">No appointments scheduled</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Assignment Modal */}
+                            {showAssignModal && (
+                                <AssignPatientModal
+                                    availablePatients={availablePatients}
+                                    assignedPatients={patients}
+                                    onAssign={handleAssignPatient}
+                                    onClose={() => setShowAssignModal(false)}
+                                    loading={assignLoading}
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
+            </main>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         </div>
     );
 };
 
 const IncomingConsultationsPanel = ({ requests, expanded, onToggle, onAccept, onReject }) => {
+<<<<<<< HEAD
     const [declineModalOpen, setDeclineModalOpen] = useState(null);
     const requestArray = Array.isArray(requests) ? requests : [];
 
@@ -1250,10 +1583,15 @@ const IncomingConsultationsPanel = ({ requests, expanded, onToggle, onAccept, on
         };
     };
 
+=======
+    const requestArray = Array.isArray(requests) ? requests : [];
+
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     const handleAccept = async (consultationId) => {
         if (onAccept) await onAccept(consultationId);
     };
 
+<<<<<<< HEAD
     const handleReject = async (consultationId, reason) => {
         // Assume onReject can take a reason, or at least we record it visually.
         if (onReject) await onReject(consultationId);
@@ -1269,11 +1607,27 @@ const IncomingConsultationsPanel = ({ requests, expanded, onToggle, onAccept, on
                 <div className="flex items-center gap-3">
                     <Activity size={20} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
                     <h3 className="font-bold text-white text-lg tracking-wide uppercase">Triage Hub - Incoming ({requestArray.length})</h3>
+=======
+    const handleReject = async (consultationId) => {
+        if (onReject) await onReject(consultationId);
+    };
+
+    return (
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <AlertCircle size={20} className="text-amber-400" />
+                    <h3 className="font-bold text-white text-lg">Incoming Consultation Requests ({requestArray.length})</h3>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 </div>
                 <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
             </button>
             {expanded && (
                 <div className="p-6 space-y-4">
+<<<<<<< HEAD
                     <AnimatePresence>
                         {requestArray.length > 0 ? (
                             requestArray.slice(0, 5).map((req, idx) => {
@@ -1393,12 +1747,75 @@ const IncomingConsultationsPanel = ({ requests, expanded, onToggle, onAccept, on
                             </motion.div>
                         )}
                     </AnimatePresence>
+=======
+                    {requestArray.length > 0 ? (
+                        requestArray.slice(0, 5).map((req, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 rounded-lg p-4"
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1">
+                                        <p className="text-white font-medium text-sm">
+                                            {req.patient_name || 'Patient Request'}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Requested: {req.created_at ? new Date(req.created_at).toLocaleString() : 'Date unknown'}
+                                        </p>
+                                    </div>
+                                    <span className="text-xs font-medium px-2 py-1 rounded bg-amber-500/20 text-amber-400">
+                                        {req.status || 'Pending'}
+                                    </span>
+                                </div>
+
+                                {req.reason && (
+                                    <div className="bg-[#0a0f14]/50 rounded p-2 mb-3">
+                                        <p className="text-xs text-gray-300">{req.reason}</p>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                    <span>
+                                        Type: <span className="text-amber-300">{req.consultation_type || 'General'}</span>
+                                    </span>
+                                    {req.duration_minutes && (
+                                        <span>Duration: {req.duration_minutes} min</span>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleAccept(req.id)}
+                                        className="flex-1 px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 rounded-lg text-emerald-300 text-xs font-medium transition-colors"
+                                    >
+                                        Accept
+                                    </button>
+                                    <button
+                                        onClick={() => handleReject(req.id)}
+                                        className="flex-1 px-3 py-1.5 bg-red-600/30 hover:bg-red-600/50 border border-red-500/50 rounded-lg text-red-300 text-xs font-medium transition-colors"
+                                    >
+                                        Decline
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))
+                    ) : (
+                        <div className="text-center py-8">
+                            <AlertCircle size={32} className="text-gray-600 mx-auto mb-2 opacity-50" />
+                            <p className="text-gray-500 text-sm">No consultation requests</p>
+                            <p className="text-gray-600 text-xs mt-2">Patients can request consultations from their dashboard</p>
+                        </div>
+                    )}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 </div>
             )}
         </div>
     );
 };
 
+<<<<<<< HEAD
 const AppointmentsPanel = ({ patientId, appointments, expanded, onToggle, onStatusUpdate, onOpenBooking }) => {
     const appointmentArray = Array.isArray(appointments) ? appointments : [];
 
@@ -1497,11 +1914,60 @@ const AppointmentsPanel = ({ patientId, appointments, expanded, onToggle, onStat
                 </div>
             )}
             
+=======
+const AppointmentsPanel = ({ appointments, expanded, onToggle }) => {
+    const appointmentArray = Array.isArray(appointments) ? appointments : [];
+
+    return (
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <Calendar size={20} className="text-cyan-400" />
+                    <h3 className="font-bold text-white text-lg">Appointments ({appointmentArray.length})</h3>
+                </div>
+                <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+            {expanded && (
+                <div className="p-6 space-y-3">
+                    {appointmentArray.length > 0 ? (
+                        appointmentArray.slice(0, 5).map((apt, idx) => (
+                            <div key={idx} className="bg-[#0a0f14] border border-cyan-500/20 rounded-lg p-3">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium text-sm">Appointment {idx + 1}</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {apt.scheduled_at ? new Date(apt.scheduled_at).toLocaleString() : 'Date TBD'}
+                                        </p>
+                                    </div>
+                                    <span className={`text-xs font-medium px-2 py-1 rounded ${apt.status === 'scheduled' ? 'bg-cyan-500/20 text-cyan-400' :
+                                            apt.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                'bg-red-500/20 text-red-400'
+                                        }`}>
+                                        {apt.status || 'Pending'}
+                                    </span>
+                                </div>
+                                {apt.notes && (
+                                    <p className="text-xs text-gray-400 mt-2">{apt.notes}</p>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm">No appointments scheduled</p>
+                    )}
+                </div>
+            )}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         </div>
     );
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 const AssignPatientModal = ({ availablePatients, assignedPatients, onAssign, onClose, loading }) => {
     const [searchAssign, setSearchAssign] = useState("");
     const assignedIds = assignedPatients.map(p => p.id);
@@ -1512,7 +1978,11 @@ const AssignPatientModal = ({ availablePatients, assignedPatients, onAssign, onC
     );
 
     return (
+<<<<<<< HEAD
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[250] p-4">
+=======
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1652,6 +2122,7 @@ const DICOMPanel = ({ patientId, expanded, onToggle }) => {
 
     return (
         <>
+<<<<<<< HEAD
             <div className="glass-card col-span-1 lg:col-span-2 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-50 pointer-events-none rounded-2xl" />
                 <div
@@ -1661,6 +2132,16 @@ const DICOMPanel = ({ patientId, expanded, onToggle }) => {
                     <div className="flex items-center gap-3">
                         <FileText size={20} className="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
                         <h3 className="font-bold text-white text-lg tracking-wide drop-shadow-md">DICOM Imaging ({dicomStudies.length})</h3>
+=======
+            <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden col-span-1 lg:col-span-2">
+                <button
+                    onClick={onToggle}
+                    className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+                >
+                    <div className="flex items-center gap-3">
+                        <FileText size={20} className="text-cyan-400" />
+                        <h3 className="font-bold text-white text-lg">DICOM Imaging ({dicomStudies.length})</h3>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     </div>
                     <div className="flex items-center gap-3">
                         {expanded && (
@@ -1676,7 +2157,11 @@ const DICOMPanel = ({ patientId, expanded, onToggle }) => {
                         )}
                         <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                     </div>
+<<<<<<< HEAD
                 </div>
+=======
+                </button>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 {expanded && (
                     <div className="p-6 space-y-3">
                         {dicomLoading ? (
@@ -1688,7 +2173,11 @@ const DICOMPanel = ({ patientId, expanded, onToggle }) => {
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     onClick={() => navigate(`/doctor/dicom-viewer?study_id=${study.id}`)}
+<<<<<<< HEAD
                                     className="bg-black/20 border border-cyan-500/20 rounded-lg p-4 hover:border-cyan-500/60 hover:bg-white/5 transition-all cursor-pointer group"
+=======
+                                    className="bg-[#0a0f14] border border-cyan-500/20 rounded-lg p-4 hover:border-cyan-500/60 hover:bg-[#0f1419] transition-all cursor-pointer group"
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
@@ -1814,12 +2303,16 @@ export default DoctorDashboard;
 // CLINICAL DASHBOARD COMPONENTS
 // ─────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 const ClinicalDashboard = ({ 
     patient, details, loading, onClose, appointments, 
     consultationRequests, onAcceptConsultation, onRejectConsultation, 
     onStatusUpdate, appointmentId, mockTriageScores, 
     mockConsultationNotes, onOpenBooking, ...rest 
 }) => {
+=======
+const ClinicalDashboard = ({ patient, details, loading, onClose, appointments, consultationRequests, onAcceptConsultation, onRejectConsultation, mockTriageScores, mockConsultationNotes, mockPrescriptions, mockTimelineEvents, mockAppointments }) => {
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     const [expandedSections, setExpandedSections] = useState({
         conditions: true,
         medications: true,
@@ -1838,8 +2331,11 @@ const ClinicalDashboard = ({
         timeline: true
     });
 
+<<<<<<< HEAD
     const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     const toggleSection = (section) => {
         setExpandedSections(prev => ({
             ...prev,
@@ -1858,6 +2354,7 @@ const ClinicalDashboard = ({
     return (
         <div className="space-y-6">
             {/* Patient Header Card */}
+<<<<<<< HEAD
             {/* Wide-Span Hero Card */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -1877,17 +2374,44 @@ const ClinicalDashboard = ({
                                 <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase rounded-full border border-emerald-500/30 tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.3)]">Stable Overview</span>
                             </div>
                             <p className="text-gray-400 font-medium">#{patient.id || 'PID-X001'} • {patient.email}</p>
+=======
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-[#121820] to-[#1a2332] border border-[#2a364a] rounded-2xl p-6"
+            >
+                <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl font-bold border border-blue-500/30">
+                            {patient.first_name[0]}{patient.last_name[0]}
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-1">{patient.first_name} {patient.last_name}</h2>
+                            <p className="text-gray-400">{patient.email}</p>
+                            <div className="flex items-center gap-3 mt-3">
+                                <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
+                                    Active Patient
+                                </span>
+                            </div>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                         </div>
                     </div>
                     <button
                         onClick={onClose}
+<<<<<<< HEAD
                         className="px-4 py-2 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all border border-white/10 hover:border-white/20 text-sm font-bold tracking-widest uppercase"
                     >
                         <ChevronRight size={16} className="rotate-180 mr-2" /> Back to Overview
+=======
+                        className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-[#1f2937] rounded-lg"
+                    >
+                        <X size={20} />
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     </button>
                 </div>
             </motion.div>
 
+<<<<<<< HEAD
             {/* War Room: 3-Column Command Center (BENTO GRID MODE) */}
             <div className="grid grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)_350px] gap-6 items-start mt-6">
                 
@@ -1928,17 +2452,126 @@ const ClinicalDashboard = ({
                 {/* Column 2: Action Center (Center) */}
                 <div className="flex flex-col space-y-6 min-w-0">
                     {mockTriageScores && mockTriageScores.length > 0 && (
+=======
+            {/* Clinical Panels */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Conditions Panel */}
+                <ConditionsPanel
+                    conditions={details?.conditions || []}
+                    expanded={expandedSections.conditions}
+                    onToggle={() => toggleSection('conditions')}
+                />
+
+                {/* Medications Panel */}
+                <MedicationsPanel
+                    medications={details?.medications || []}
+                    expanded={expandedSections.medications}
+                    onToggle={() => toggleSection('medications')}
+                />
+
+                {/* Allergies Panel */}
+                <AllergiesPanel
+                    allergies={details?.allergies || []}
+                    expanded={expandedSections.allergies}
+                    onToggle={() => toggleSection('allergies')}
+                />
+
+                {/* Vital Signs Panel */}
+                <VitalsPanel
+                    observations={details?.observations || []}
+                    expanded={expandedSections.vitals}
+                    onToggle={() => toggleSection('vitals')}
+                />
+
+                {/* DICOM Imaging Panel */}
+                <DICOMPanel
+                    patientId={patient.id}
+                    expanded={expandedSections.dicom}
+                    onToggle={() => toggleSection('dicom')}
+                />
+
+                {/* Incoming Consultation Requests Panel */}
+                <IncomingConsultationsPanel
+                    requests={consultationRequests || []}
+                    expanded={expandedSections.consultations}
+                    onToggle={() => toggleSection('consultations')}
+                    onAccept={onAcceptConsultation}
+                    onReject={onRejectConsultation}
+                />
+
+                {/* Appointments Panel */}
+                <AppointmentsPanel
+                    appointments={appointments || []}
+                    expanded={expandedSections.appointments}
+                    onToggle={() => toggleSection('appointments')}
+                />
+            </div>
+
+            {/* Full-width Labs Panel */}
+            <LabsPanel
+                reports={details?.diagnosticReports || []}
+                expanded={expandedSections.labs}
+                onToggle={() => toggleSection('labs')}
+            />
+
+            {/* NEW FEATURES SECTION */}
+            <div className="mt-8 pt-8 border-t border-[#1f2937]">
+                <h3 className="text-xl font-bold text-white mb-6">Clinical Management Tools</h3>
+
+                {/* Urgent Alert Panel - Top Priority */}
+                {mockTriageScores && mockTriageScores.length > 0 && (
+                    <div className="mb-6">
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                         <UrgentAlertPanel
                             patientId={patient.id}
                             isDoctor={true}
                         />
+<<<<<<< HEAD
                     )}
+=======
+                    </div>
+                )}
+
+                {/* 2-Column Grid for Calendar and Triage */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* Appointment Calendar */}
+                    <AppointmentCalendar
+                        patientId={patient.id}
+                        isDoctor={true}
+                    />
+
+                    {/* Triage Score Panel */}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     <TriageScorePanel
                         patientId={patient.id}
                         isDoctor={true}
                         patientName={`${patient.first_name} ${patient.last_name}`}
                     />
+<<<<<<< HEAD
 
+=======
+                </div>
+
+                {/* 2-Column Grid for Follow-up and Prescriptions */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* Follow-up Scheduling */}
+                    <FollowUpScheduling
+                        patientId={patient.id}
+                        isDoctor={true}
+                        patientName={`${patient.first_name} ${patient.last_name}`}
+                    />
+
+                    {/* E-Prescription Form */}
+                    <EPrescriptionForm
+                        patientId={patient.id}
+                        isDoctor={true}
+                        patientName={`${patient.first_name} ${patient.last_name}`}
+                    />
+                </div>
+
+                {/* Consultation Notes Form */}
+                <div className="mb-6">
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     <ConsultationNotesForm
                         patientId={patient.id}
                         appointmentId={appointments?.[0]?.id || null}
@@ -1947,6 +2580,7 @@ const ClinicalDashboard = ({
                     />
                 </div>
 
+<<<<<<< HEAD
                 {/* Column 3: Logistics & Action (Right) */}
                 <div className="flex flex-col space-y-6 min-w-0">
                     <AppointmentsPanel
@@ -1970,11 +2604,18 @@ const ClinicalDashboard = ({
                     <FollowUpScheduling
                         patientId={patient.id}
                         appointmentId={appointmentId}
+=======
+                {/* Patient History Timeline - Full Width */}
+                <div>
+                    <PatientHistoryTimeline
+                        patientId={patient.id}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                         isDoctor={true}
                         patientName={`${patient.first_name} ${patient.last_name}`}
                     />
                 </div>
             </div>
+<<<<<<< HEAD
 
             {/* Bottom Section: Full-Width Event Stream */}
             <motion.div
@@ -2024,16 +2665,22 @@ const ClinicalDashboard = ({
                     </div>
                 )}
             </AnimatePresence>
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         </div>
     );
 };
 
 const ConditionsPanel = ({ conditions, expanded, onToggle }) => {
+<<<<<<< HEAD
     const [showAddQuick, setShowAddQuick] = useState(false);
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     const conditionArray = Array.isArray(conditions)
         ? conditions.map(c => c.resource || c)
         : [];
 
+<<<<<<< HEAD
     const getSeverityDetails = (status) => {
         const severities = {
             'active': { label: 'Active', color: 'text-amber-400', bg: 'bg-amber-500/10', glow: 'shadow-[0_0_10px_rgba(245,158,11,0.3)]' },
@@ -2139,6 +2786,31 @@ const ConditionsPanel = ({ conditions, expanded, onToggle }) => {
                             <Activity size={32} className="mb-2" />
                             <p className="text-xs font-black uppercase tracking-widest">No Active Conditions</p>
                         </div>
+=======
+    return (
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <AlertCircle size={20} className="text-blue-400" />
+                    <h3 className="font-bold text-white text-lg">Conditions ({conditionArray.length})</h3>
+                </div>
+                <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+            {expanded && (
+                <div className="p-6 space-y-3">
+                    {conditionArray.length > 0 ? (
+                        conditionArray.slice(0, 5).map((cond, idx) => (
+                            <div key={idx} className="bg-[#0a0f14] border border-[#1f2937] rounded-lg p-3">
+                                <p className="text-white font-medium text-sm">{cond.code?.coding?.[0]?.display || cond.code?.text || 'Condition'}</p>
+                                <p className="text-xs text-gray-500 mt-1">Status: {cond.clinicalStatus?.coding?.[0]?.code || 'unknown'}</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm">No conditions recorded</p>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     )}
                 </div>
             )}
@@ -2146,6 +2818,7 @@ const ConditionsPanel = ({ conditions, expanded, onToggle }) => {
     );
 };
 
+<<<<<<< HEAD
 const MedicationsPanel = ({ medications, expanded, onToggle, onAdd }) => {
     const medArray = Array.isArray(medications)
         ? medications.map(m => m.resource || m)
@@ -2239,6 +2912,40 @@ const MedicationsPanel = ({ medications, expanded, onToggle, onAdd }) => {
                             <Pill size={32} className="mb-2" />
                             <p className="text-xs font-black uppercase tracking-widest">No Active Prescriptions</p>
                         </div>
+=======
+const MedicationsPanel = ({ medications, expanded, onToggle }) => {
+    const medArray = Array.isArray(medications)
+        ? medications.map(m => m.resource || m)
+        : [];
+
+    return (
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <Pill size={20} className="text-emerald-400" />
+                    <h3 className="font-bold text-white text-lg">Active Medications ({medArray.filter(m => m.status === 'active').length})</h3>
+                </div>
+                <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+            {expanded && (
+                <div className="p-6 space-y-3">
+                    {medArray.filter(m => m.status === 'active').length > 0 ? (
+                        medArray.filter(m => m.status === 'active').slice(0, 5).map((med, idx) => (
+                            <div key={idx} className="bg-[#0a0f14] border border-emerald-500/20 rounded-lg p-3">
+                                <p className="text-white font-medium text-sm">
+                                    {med.medicationCodeableConcept?.coding?.[0]?.display || med.medicationReference?.display || 'Medication'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {med.dosageInstruction?.[0]?.text || med.dosageInstruction?.[0]?.doseAndRate?.[0]?.doseQuantity?.value + ' ' + med.dosageInstruction?.[0]?.doseAndRate?.[0]?.doseQuantity?.unit || 'Dosage not specified'}
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm">No active medications</p>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     )}
                 </div>
             )}
@@ -2251,6 +2958,7 @@ const AllergiesPanel = ({ allergies, expanded, onToggle }) => {
         ? allergies.map(a => a.resource || a)
         : [];
 
+<<<<<<< HEAD
     const hasHighRisk = allergyArray.some(a => a.criticality === 'high');
 
     return (
@@ -2284,6 +2992,33 @@ const AllergiesPanel = ({ allergies, expanded, onToggle }) => {
                                     {allergy.code?.coding?.[0]?.display || allergy.code?.text || 'Allergen'}
                                 </p>
                                 <p className="text-sm text-gray-400 mt-1">
+=======
+    return (
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <AlertCircle size={20} className={allergyArray.some(a => a.criticality === 'high') ? 'text-red-400' : 'text-yellow-400'} />
+                    <h3 className="font-bold text-white text-lg">Allergies ({allergyArray.length})</h3>
+                </div>
+                <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+            {expanded && (
+                <div className="p-6 space-y-3">
+                    {allergyArray.length > 0 ? (
+                        allergyArray.map((allergy, idx) => (
+                            <div key={idx} className={`border rounded-lg p-3 ${allergy.criticality === 'high'
+                                    ? 'bg-red-500/10 border-red-500/30'
+                                    : 'bg-[#0a0f14] border-[#1f2937]'
+                                }`}>
+                                <p className={`font-medium text-sm ${allergy.criticality === 'high' ? 'text-red-400' : 'text-white'
+                                    }`}>
+                                    {allergy.code?.coding?.[0]?.display || allergy.code?.text || 'Allergen'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                     Reaction: {allergy.reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display || allergy.reaction?.[0]?.manifestation?.[0]?.text || 'Not specified'}
                                 </p>
                             </div>
@@ -2297,11 +3032,16 @@ const AllergiesPanel = ({ allergies, expanded, onToggle }) => {
     );
 };
 
+<<<<<<< HEAD
 const BentoVitalGrid = ({ observations }) => {
+=======
+const VitalsPanel = ({ observations, expanded, onToggle }) => {
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     const obsArray = Array.isArray(observations)
         ? observations.map(o => o.resource || o)
         : [];
 
+<<<<<<< HEAD
     const vitalTypes = [
         { key: 'heart-rate', codes: ['heart-rate', 'HR', '8867-4'], label: 'Heart Rate', unit: 'BPM', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', icon: Heart, iconColor: 'text-rose-400', wave: 'ekg', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.3)]' },
         { key: 'blood-pressure', codes: ['blood-pressure', 'BP', '8480-6', '8462-4'], label: 'Blood Pressure', unit: 'mmHg', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: Activity, iconColor: 'text-blue-400', wave: 'pulse', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.3)]' },
@@ -2502,6 +3242,51 @@ const ClinicalScratchpad = () => {
                 className="w-full h-full bg-transparent p-4 text-sm text-gray-300 focus:outline-none resize-none placeholder-gray-600 font-medium"
                 placeholder="Jot down quick thoughts here..."
             ></textarea>
+=======
+    const vitalTypes = {
+        'heart-rate': { label: 'Heart Rate', unit: 'bpm', icon: Heart, color: 'text-red-400' },
+        'blood-pressure': { label: 'Blood Pressure', unit: 'mmHg', icon: Heart, color: 'text-blue-400' },
+        'body-temperature': { label: 'Temperature', unit: '°C', icon: Droplet, color: 'text-orange-400' },
+        'oxygen-saturation': { label: 'SpO2', unit: '%', icon: Droplet, color: 'text-emerald-400' }
+    };
+
+    const vitals = obsArray.filter(o =>
+        o.code?.coding?.some(c => Object.keys(vitalTypes).some(k => c.code?.includes(k)))
+    ).slice(0, 5);
+
+    return (
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <Heart size={20} className="text-red-400" />
+                    <h3 className="font-bold text-white text-lg">Vital Signs ({vitals.length})</h3>
+                </div>
+                <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            </button>
+            {expanded && (
+                <div className="p-6 space-y-3">
+                    {vitals.length > 0 ? (
+                        vitals.map((vital, idx) => (
+                            <div key={idx} className="bg-[#0a0f14] border border-[#1f2937] rounded-lg p-3 flex items-center justify-between">
+                                <div>
+                                    <p className="text-white font-medium text-sm">{vital.code?.coding?.[0]?.display || 'Observation'}</p>
+                                    <p className="text-xs text-gray-500 mt-1">{new Date(vital.effectiveDateTime).toLocaleString()}</p>
+                                </div>
+                                <p className="text-right">
+                                    <span className="text-lg font-bold text-white">{vital.valueQuantity?.value}</span>
+                                    <span className="text-xs text-gray-500 ml-1">{vital.valueQuantity?.unit}</span>
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm">No vital signs recorded</p>
+                    )}
+                </div>
+            )}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         </div>
     );
 };
@@ -2512,6 +3297,7 @@ const LabsPanel = ({ reports, expanded, onToggle }) => {
         : [];
 
     return (
+<<<<<<< HEAD
         <div className="glass-card relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent opacity-50 pointer-events-none rounded-2xl" />
             <button
@@ -2520,6 +3306,15 @@ const LabsPanel = ({ reports, expanded, onToggle }) => {
             >
                 <div className="flex items-center gap-3">
                     <TrendingUp size={20} className="text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]" />
+=======
+        <div className="bg-[#121820] border border-[#1f2937] rounded-2xl overflow-hidden">
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between p-6 hover:bg-[#1a2332] transition-colors border-b border-[#1f2937]"
+            >
+                <div className="flex items-center gap-3">
+                    <TrendingUp size={20} className="text-purple-400" />
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                     <h3 className="font-bold text-white text-lg">Lab Results ({reportArray.length})</h3>
                 </div>
                 <ChevronDown size={20} className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -2528,6 +3323,7 @@ const LabsPanel = ({ reports, expanded, onToggle }) => {
                 <div className="p-6 space-y-3">
                     {reportArray.length > 0 ? (
                         reportArray.slice(0, 5).map((report, idx) => (
+<<<<<<< HEAD
                             <div key={idx} className="bg-[#121822]/80 backdrop-blur-md border border-purple-500/20 shadow-md rounded-lg p-3 hover:border-purple-500/50 hover:shadow-purple-500/10 transition-all relative z-10">
                                 <p className="text-white font-medium text-sm">{report.code?.coding?.[0]?.display || 'Lab Report'}</p>
                                 <p className="text-xs text-gray-400 mt-1">
@@ -2535,6 +3331,15 @@ const LabsPanel = ({ reports, expanded, onToggle }) => {
                                 </p>
                                 <p className="text-xs font-semibold text-purple-400 mt-2">
                                     {report.result?.length || 0} results available
+=======
+                            <div key={idx} className="bg-[#0a0f14] border border-purple-500/20 rounded-lg p-3">
+                                <p className="text-white font-medium text-sm">{report.code?.coding?.[0]?.display || 'Lab Report'}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Issued: {new Date(report.issued).toLocaleDateString()}
+                                </p>
+                                <p className="text-xs text-purple-400 mt-2">
+                                    {report.result?.length || 0} results
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                 </p>
                             </div>
                         ))

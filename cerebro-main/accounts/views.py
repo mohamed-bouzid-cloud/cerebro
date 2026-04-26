@@ -6,7 +6,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+<<<<<<< HEAD
 from django.db import models, transaction, IntegrityError
+=======
+from django.db import models
+from django.db.models import Q
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 from datetime import timedelta
 
 import json
@@ -15,15 +20,22 @@ from .models import (
     User, DoctorProfile, PatientProfile,
     Allergy, MedicalHistory, FamilyHistory, Insurance, AdvanceDirective,
     Appointment, Encounter,
+<<<<<<< HEAD
     Message, Consultation, Prescription, LabResult, VitalSigns, MedicalDocument, Referral,
     DICOMStudy, DICOMSeries, HL7Message, FHIRResourceLog, Notification,
     TriageScore, ConsultationNote, PatientEventTimeline, DoctorAvailability
+=======
+    Message, Prescription, LabResult, VitalSigns, MedicalDocument, Referral,
+    DICOMStudy, DICOMSeries, HL7Message, FHIRResourceLog, Notification,
+    TriageScore, ConsultationNote, PatientEventTimeline
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 )
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     AllergySerializer, MedicalHistorySerializer, FamilyHistorySerializer,
     InsuranceSerializer, AdvanceDirectiveSerializer,
     AppointmentSerializer, EncounterSerializer,
+<<<<<<< HEAD
     MessageSerializer, ConsultationSerializer, PrescriptionSerializer, 
     LabResultSerializer, VitalSignsSerializer, MedicalDocumentSerializer, ReferralSerializer,
     DICOMStudySerializer, DICOMSeriesSerializer, HL7MessageSerializer, FHIRResourceLogSerializer, NotificationSerializer,
@@ -33,6 +45,14 @@ from .serializers import (
 
 from .fhir_service import fhir_service
 
+=======
+    MessageSerializer, PrescriptionSerializer, 
+    LabResultSerializer, VitalSignsSerializer, MedicalDocumentSerializer, ReferralSerializer,
+    DICOMStudySerializer, DICOMSeriesSerializer, HL7MessageSerializer, FHIRResourceLogSerializer, NotificationSerializer,
+    TriageScoreSerializer, ConsultationNoteSerializer, PatientEventTimelineSerializer
+)
+
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 def _get_tokens(user):
     refresh = RefreshToken.for_user(user)
@@ -94,6 +114,7 @@ class UserProfileView(RetrieveUpdateAPIView):
         return self.request.user
 
 
+<<<<<<< HEAD
 class PatientDetailView(GenericAPIView):
     """GET /api/auth/patients/{id}/ — get detailed patient information (for assigned doctors)."""
     permission_classes = [IsAuthenticated]
@@ -237,11 +258,14 @@ class PatientDetailView(GenericAPIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 # ────────────────────────────────────────────
 #  Appointment Views
 # ────────────────────────────────────────────
 
 class AppointmentViewSet(viewsets.ModelViewSet):
+<<<<<<< HEAD
     """Manage appointments for patients and doctors."""
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
@@ -305,12 +329,43 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(notifications, many=True)
         return Response(serializer.data)
+=======
+    """Manage appointments and consultation requests (unified as FHIR Appointments)."""
+    serializer_class = AppointmentSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.OrderingFilter]
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == "patient":
+            return Appointment.objects.filter(patient=user)
+        elif user.role == "doctor":
+            return Appointment.objects.filter(doctor=user)
+        return Appointment.objects.none()
+
+    def perform_create(self, serializer):
+        # If patient creates: defaults to status="proposed" for consultation request
+        if self.request.user.role == "patient":
+            # Patient can request a specific doctor or leave open
+            doctor_id = self.request.data.get('doctor')
+            if doctor_id:
+                serializer.save(patient=self.request.user, doctor_id=doctor_id)
+            else:
+                serializer.save(patient=self.request.user)  # doctor=None for open requests
+        else:
+            # If doctor creates: defaults to status="booked" for confirmed appointment
+            serializer.save(doctor=self.request.user)
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     @action(detail=False, methods=['get'])
     def incoming_consultations(self, request):
         """Get incoming consultation requests for the doctor (status: proposed, requested)."""
+<<<<<<< HEAD
         from django.db.models import Q
         
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         if request.user.role != "doctor":
             return Response({"error": "Only doctors can view consultation requests"}, 
                           status=status.HTTP_403_FORBIDDEN)
@@ -325,6 +380,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(consultations, many=True)
         return Response(serializer.data)
 
+<<<<<<< HEAD
 
 class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
     """Manage doctor working hours."""
@@ -391,6 +447,101 @@ class DoctorAvailabilityViewSet(viewsets.ModelViewSet):
             return Response({"is_out_of_office": profile.is_out_of_office})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+=======
+    @action(detail=False, methods=['get'])
+    def my_pending_requests(self, request):
+        """Get patient's pending consultation requests (waiting for doctor response)."""
+        if request.user.role != "patient":
+            return Response({"error": "Only patients can view their pending requests"}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        # Patient sees their own appointments with proposed/requested status
+        pending = self.get_queryset().filter(
+            status__in=["proposed", "requested"]
+        ).order_by('-created_at')
+        serializer = self.get_serializer(pending, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def upcoming(self, request):
+        """Get upcoming appointments (next 7 days, status: booked)."""
+        now = timezone.now()
+        upcoming = self.get_queryset().filter(
+            scheduled_at__gte=now,
+            scheduled_at__lt=now + timedelta(days=7),
+            status="booked"
+        )
+        serializer = self.get_serializer(upcoming, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Get today's appointments (status: booked)."""
+        today = timezone.now().date()
+        today_appointments = self.get_queryset().filter(
+            scheduled_at__date=today,
+            status="booked"
+        )
+        serializer = self.get_serializer(today_appointments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def notifications(self, request):
+        """Get appointments in the next 2 days for notifications (status: booked)."""
+        now = timezone.now()
+        notifications = self.get_queryset().filter(
+            scheduled_at__gte=now,
+            scheduled_at__lte=now + timedelta(days=2),
+            status="booked"
+        )
+        serializer = self.get_serializer(notifications, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def accept_consultation(self, request, pk=None):
+        """Doctor accepts a consultation request (proposed → booked)."""
+        if request.user.role != "doctor":
+            return Response({"error": "Only doctors can accept consultations"}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        appointment = self.get_object()
+        # Allow accepting if: (1) open request (doctor=NULL) or (2) assigned to this doctor, AND (3) status is proposed/requested
+        if appointment.status not in ["proposed", "requested"]:
+            return Response({"error": "This consultation cannot be accepted (invalid status: " + appointment.status + ")"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        if appointment.doctor is not None and appointment.doctor != request.user:
+            return Response({"error": "This consultation is already assigned to another doctor"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        # Assign doctor and mark as booked
+        appointment.doctor = request.user
+        appointment.status = "booked"
+        appointment.save()
+        return Response({"status": "Consultation accepted", "appointment": AppointmentSerializer(appointment).data})
+
+    @action(detail=True, methods=['post'])
+    def reject_consultation(self, request, pk=None):
+        """Doctor rejects a consultation request."""
+        if request.user.role != "doctor":
+            return Response({"error": "Only doctors can reject consultations"}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        appointment = self.get_object()
+        
+        # Allow rejecting if: (1) open request (doctor=NULL) or (2) assigned to this doctor, AND (3) status is proposed/requested
+        if appointment.status not in ["proposed", "requested"]:
+            return Response({"error": "This consultation cannot be rejected (invalid status)"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        if appointment.doctor is not None and appointment.doctor != request.user:
+            return Response({"error": "This consultation is assigned to another doctor"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        appointment.status = "cancelled"
+        appointment.save()
+        return Response({"status": "Consultation rejected"})
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 
 # ────────────────────────────────────────────
@@ -579,6 +730,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 
 # ────────────────────────────────────────────
+<<<<<<< HEAD
 #  Consultation Views
 # ────────────────────────────────────────────
 
@@ -720,6 +872,8 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         return Response({"error": "Unauthorized or invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 # ────────────────────────────────────────────
 #  Prescription Views
 # ────────────────────────────────────────────
@@ -812,13 +966,18 @@ class LabResultViewSet(viewsets.ModelViewSet):
     def mark_reviewed(self, request, pk=None):
         """Mark lab result as reviewed by doctor."""
         result = self.get_object()
+<<<<<<< HEAD
         # only the ordering doctor can mark as reviewed
         if getattr(result, 'doctor', None) == request.user:
+=======
+        if result.ordered_by == request.user:
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             result.status = "reviewed"
             result.save()
             return Response({"status": "marked as reviewed"})
         return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
 
+<<<<<<< HEAD
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
         """Publish/validate a lab result: set status, flag critical values, notify and send to FHIR."""
@@ -913,6 +1072,8 @@ class LabResultViewSet(viewsets.ModelViewSet):
 
         return Response({"status": "published", "critical": critical})
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 # ────────────────────────────────────────────
 #  Vital Signs Views
@@ -1106,7 +1267,11 @@ class DoctorListView(ListCreateAPIView):
 
 
 class PatientListView(ListCreateAPIView):
+<<<<<<< HEAD
     """List patients for a doctor."""
+=======
+    """List patients for a doctor or allow doctor to assign a patient."""
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -1116,6 +1281,7 @@ class PatientListView(ListCreateAPIView):
         if request.user.role != "doctor":
             return Response({"error": "Only doctors can view patients"}, status=status.HTTP_403_FORBIDDEN)
         
+<<<<<<< HEAD
         # Get patients linked to this doctor
         patients = PatientProfile.objects.filter(doctors=request.user).values_list('user', flat=True)
         patient_users = User.objects.filter(id__in=patients)
@@ -1144,6 +1310,43 @@ class PatientListView(ListCreateAPIView):
             })
         except User.DoesNotExist:
             return Response({"error": "No patient found with this email"}, status=status.HTTP_404_NOT_FOUND)
+=======
+        # Get patients linked to this doctor via two methods:
+        # 1. Manually assigned (PatientProfile.doctors M2M)
+        manually_assigned = PatientProfile.objects.filter(doctors=request.user).values_list('user', flat=True)
+        
+        # 2. Linked through active Appointments (booked consultations)
+        appointment_patients = Appointment.objects.filter(
+            doctor=request.user,
+            status__in=["proposed", "requested", "booked", "completed"]
+        ).values_list('patient', flat=True).distinct()
+        
+        # Combine both sets (remove duplicates)
+        all_patient_ids = set(manually_assigned) | set(appointment_patients)
+        
+        patient_users = User.objects.filter(id__in=all_patient_ids)
+        serializer = UserSerializer(patient_users, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        """Doctor assigns a patient to themselves."""
+        if request.user.role != "doctor":
+            return Response({"error": "Only doctors can assign patients"}, status=status.HTTP_403_FORBIDDEN)
+        
+        patient_id = request.data.get("patient_id")
+        try:
+            patient = User.objects.get(id=patient_id, role="patient")
+            patient_profile = patient.patient_profile
+            patient_profile.doctors.add(request.user)
+            return Response({
+                "message": "Patient assigned successfully",
+                "patient": UserSerializer(patient).data
+            })
+        except User.DoesNotExist:
+            return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
+        except AttributeError:
+            return Response({"error": "User is not a patient"}, status=status.HTTP_400_BAD_REQUEST)
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 
 # ────────────────────────────────────────────
@@ -1641,9 +1844,15 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response({"status": "marked as read"})
 
 
+<<<<<<< HEAD
 # ────────────────────────────────────────────────────────────────────────────
 #  Triage Scores & Clinical Assessment
 # ────────────────────────────────────────────────────────────────────────────
+=======
+# ────────────────────────────────────────────
+#  Triage & Clinical Assessment Views
+# ────────────────────────────────────────────
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 class TriageScoreViewSet(viewsets.ModelViewSet):
     """Create and manage triage scores for patient urgency assessment."""
@@ -1794,6 +2003,14 @@ class PatientEventTimelineViewSet(viewsets.ReadOnlyModelViewSet):
             else:
                 return Response({"error": "patient_id required"}, status=status.HTTP_400_BAD_REQUEST)
         
+<<<<<<< HEAD
         events = self.get_queryset().filter(patient_id=patient_id, is_critical=True)
+=======
+        events = PatientEventTimeline.objects.filter(
+            patient_id=patient_id,
+            is_critical=True
+        ).order_by('-event_date')[:20]
+        
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         serializer = self.get_serializer(events, many=True)
         return Response(serializer.data)

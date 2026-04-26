@@ -180,6 +180,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+<<<<<<< HEAD
 # ─────────────────────────────────────────────────────────────
 #  FHIR Server Configuration
 # ─────────────────────────────────────────────────────────────
@@ -188,3 +189,18 @@ FHIR_SERVER_URL = 'https://hapi.fhir.org/baseR4'
 FHIR_SYNC_ENABLED = True
 FHIR_SERVER_TIMEOUT = 30
 FHIR_SERVER_AUTH_TOKEN = None  # Use for authenticated FHIR servers
+=======
+# ─────────────────────────────────────────────────────────────────
+#  FHIR Server Integration
+# ─────────────────────────────────────────────────────────────────
+# Configure your FHIR R4 compliant server here
+# Example: 'http://localhost:8080/fhir' for Hapi FHIR server
+# Set to None to disable FHIR integration
+
+FHIR_SERVER_URL = os.environ.get('FHIR_SERVER_URL', 'http://localhost:8080/fhir')
+FHIR_SERVER_AUTH_TOKEN = os.environ.get('FHIR_SERVER_AUTH_TOKEN', None)  # Optional Bearer token
+FHIR_SERVER_TIMEOUT = int(os.environ.get('FHIR_SERVER_TIMEOUT', '30'))  # Request timeout in seconds
+
+# Enable/disable FHIR sync (set to False to run locally without external FHIR server)
+FHIR_SYNC_ENABLED = os.environ.get('FHIR_SYNC_ENABLED', 'True').lower() == 'true'
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550

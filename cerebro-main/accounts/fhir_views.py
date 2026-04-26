@@ -41,11 +41,19 @@ class FHIRAppointmentViewSet(viewsets.ViewSet):
         
         if user.role == "patient":
             # Get patient's FHIR ID or use user ID
+<<<<<<< HEAD
             fhir_id = getattr(user, 'fhir_resource_id', None) or str(user.id)
             success, fhir_appointments = fhir_service.search_appointments_for_patient(fhir_id)
         elif user.role == "doctor":
             # Get doctor's FHIR ID or use user ID
             fhir_id = getattr(user, 'fhir_resource_id', None) or str(user.id)
+=======
+            fhir_id = user.fhir_resource_id or str(user.id)
+            success, fhir_appointments = fhir_service.search_appointments_for_patient(fhir_id)
+        elif user.role == "doctor":
+            # Get doctor's FHIR ID or use user ID
+            fhir_id = user.fhir_resource_id or str(user.id)
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             success, fhir_appointments = fhir_service.search_appointments_for_practitioner(fhir_id)
         else:
             return Response(
@@ -130,10 +138,17 @@ class FHIRAppointmentViewSet(viewsets.ViewSet):
             )
         
         if user.role == "patient":
+<<<<<<< HEAD
             fhir_id = getattr(user, 'fhir_resource_id', None) or str(user.id)
             success, fhir_appointments = fhir_service.search_appointments_for_patient(fhir_id)
         elif user.role == "doctor":
             fhir_id = getattr(user, 'fhir_resource_id', None) or str(user.id)
+=======
+            fhir_id = user.fhir_resource_id or str(user.id)
+            success, fhir_appointments = fhir_service.search_appointments_for_patient(fhir_id)
+        elif user.role == "doctor":
+            fhir_id = user.fhir_resource_id or str(user.id)
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             success, fhir_appointments = fhir_service.search_appointments_for_practitioner(fhir_id)
         else:
             return Response(
@@ -251,7 +266,11 @@ class FHIRDoctorDashboardView(GenericAPIView):
             return self._get_local_dashboard(user)
         
         # Fetch from FHIR server
+<<<<<<< HEAD
         fhir_id = getattr(user, 'fhir_resource_id', None) or str(user.id)
+=======
+        fhir_id = user.fhir_resource_id or str(user.id)
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         success, fhir_appointments = fhir_service.search_appointments_for_practitioner(fhir_id)
         
         if not success:

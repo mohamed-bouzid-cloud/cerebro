@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Beaker, AlertCircle, CheckCircle, ChevronDown, X } from 'lucide-react';
@@ -7,6 +8,13 @@ const LabResultsTable = ({ labs }) => {
 
     const closeModal = () => setExpanded(null);
 
+=======
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Beaker, AlertCircle, CheckCircle, ChevronDown } from 'lucide-react';
+
+const LabResultsTable = ({ labs }) => {
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     return (
         <div style={{ display: 'grid', gap: '16px' }}>
             {labs?.length > 0 ? (
@@ -39,7 +47,11 @@ const LabResultsTable = ({ labs }) => {
                                 <div>
                                     <h4 style={{ color: '#fff', fontSize: '16px', fontWeight: 600, margin: 0 }}>{lab.test_name}</h4>
                                     <p style={{ color: '#666', fontSize: '13px', margin: '2px 0 0 0' }}>
+<<<<<<< HEAD
                                         Ordered by Dr. {lab.doctor_name} • {new Date(lab.ordered_at).toLocaleDateString()}
+=======
+                                        Ordered by Dr. {lab.doctor_name} &bull; {new Date(lab.ordered_at).toLocaleDateString()}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                     </p>
                                 </div>
                             </div>
@@ -85,7 +97,11 @@ const LabResultsTable = ({ labs }) => {
                             <p style={{ color: '#666', fontSize: '12px', margin: 0 }}>
                                 Reference Range: <span style={{ color: '#888' }}>{lab.reference_range || 'N/A'}</span>
                             </p>
+<<<<<<< HEAD
                             <button onClick={() => setExpanded(idx)} style={{
+=======
+                            <button style={{
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                 background: 'transparent',
                                 border: 'none',
                                 color: '#3b82f6',
@@ -104,6 +120,7 @@ const LabResultsTable = ({ labs }) => {
             ) : (
                 <p style={{ color: '#888', textAlign: 'center', padding: '40px' }}>No lab results available.</p>
             )}
+<<<<<<< HEAD
 
             {/* Expanded modal */}
             {expanded !== null && labs && labs[expanded] && (
@@ -178,6 +195,8 @@ const LabResultsTable = ({ labs }) => {
                     </div>
                 </div>
             )}
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         </div>
     );
 };

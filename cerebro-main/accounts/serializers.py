@@ -4,9 +4,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import (
     User, DoctorProfile, PatientProfile,
     Allergy, MedicalHistory, FamilyHistory, Insurance, AdvanceDirective,
+<<<<<<< HEAD
     Appointment, Encounter, Message, Consultation, Prescription, LabResult,
     VitalSigns, MedicalDocument, Referral, DICOMStudy, DICOMSeries, HL7Message, FHIRResourceLog, Notification,
     TriageScore, ConsultationNote, PatientEventTimeline, DoctorAvailability
+=======
+    Appointment, Encounter, Message, Prescription, LabResult,
+    VitalSigns, MedicalDocument, Referral, DICOMStudy, DICOMSeries, HL7Message, FHIRResourceLog, Notification,
+    TriageScore, ConsultationNote, PatientEventTimeline
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 )
 
 
@@ -65,6 +71,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = ("id", "patient", "patient_name", "doctor", "doctor_name", "doctor_specialty", 
+<<<<<<< HEAD
                   "appointment_type", "parent_appointment", "imaging_modality", "lab_test_type",
                   "scheduled_at", "duration_minutes", "status", "is_virtual", "location_room", "notes", "created_at")
 
@@ -81,6 +88,11 @@ class DoctorAvailabilitySerializer(serializers.ModelSerializer):
         model = DoctorAvailability
         fields = ("id", "doctor", "doctor_name", "day_of_week", "day_name", "start_time", "end_time", "is_active")
         read_only_fields = ("doctor",)
+=======
+                  "scheduled_at", "duration_minutes", "status", "notes", 
+                  "consultation_type", "reason", "meeting_link",
+                  "fhir_resource_id", "fhir_sync_status", "created_at", "updated_at")
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 
 # ────────────────────────────────────────────
@@ -90,7 +102,11 @@ class DoctorAvailabilitySerializer(serializers.ModelSerializer):
 class DoctorProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = DoctorProfile
+<<<<<<< HEAD
         fields = ("specialty", "license_number", "is_out_of_office")
+=======
+        fields = ("specialty", "license_number")
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 
 class PatientProfileSerializer(serializers.ModelSerializer):
@@ -251,6 +267,7 @@ class MessageSerializer(serializers.ModelSerializer):
                   "subject", "content", "is_read", "attachment_url", "created_at", "updated_at")
 
 
+<<<<<<< HEAD
 class ConsultationSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source="patient.get_full_name", read_only=True)
     doctor_name = serializers.CharField(source="doctor.get_full_name", read_only=True)
@@ -266,6 +283,8 @@ class ConsultationSerializer(serializers.ModelSerializer):
                   "notes", "meeting_link", "created_at")
 
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 class PrescriptionSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source="patient.get_full_name", read_only=True)
     doctor_name = serializers.CharField(source="doctor.get_full_name", read_only=True)
@@ -285,9 +304,13 @@ class LabResultSerializer(serializers.ModelSerializer):
         model = LabResult
         fields = ("id", "patient", "patient_name", "doctor", "doctor_name", "test_name",
                   "test_code", "status", "result_value", "result_unit", "reference_range",
+<<<<<<< HEAD
                   "is_abnormal", "interpretation", "notes", "ordered_at", "completed_at", "result_file_url",
                   "components", "panel_type", "critical_flag")
         read_only_fields = ("doctor", "ordered_at", "completed_at", "status", "is_abnormal", "critical_flag")
+=======
+                  "is_abnormal", "interpretation", "notes", "ordered_at", "completed_at", "result_file_url")
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 
 class VitalSignsSerializer(serializers.ModelSerializer):
@@ -383,6 +406,13 @@ class NotificationSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at",)
 
 
+<<<<<<< HEAD
+=======
+# ────────────────────────────────────────────
+#  Triage & Clinical Assessment Serializers
+# ────────────────────────────────────────────
+
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 class TriageScoreSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source="patient.get_full_name", read_only=True)
     doctor_name = serializers.CharField(source="doctor.get_full_name", read_only=True)
@@ -390,6 +420,10 @@ class TriageScoreSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TriageScore
+<<<<<<< HEAD
+=======
+        from .models import TriageScore
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         fields = ("id", "patient", "patient_name", "doctor", "doctor_name", "appointment", "appointment_date",
                   "urgency_level", "overall_score", "chief_complaint_severity", "vital_signs_severity",
                   "mental_status_severity", "pain_level", "chief_complaint", "assessment_notes",

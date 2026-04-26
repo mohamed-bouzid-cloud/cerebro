@@ -30,6 +30,13 @@ class User(AbstractUser):
     username = None  # remove default username field
     email = models.EmailField("email address", unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+<<<<<<< HEAD
+=======
+    
+    # FHIR Integration Fields
+    fhir_resource_id = models.CharField(max_length=255, blank=True, null=True,
+                                       help_text="FHIR Patient or Practitioner resource ID")
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "role"]
@@ -44,7 +51,14 @@ class DoctorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
     specialty = models.CharField(max_length=120, blank=True, default="")
     license_number = models.CharField(max_length=60, blank=True, default="")
+<<<<<<< HEAD
     is_out_of_office = models.BooleanField(default=False)
+=======
+    
+    # FHIR Integration Fields
+    fhir_resource_id = models.CharField(max_length=255, blank=True, null=True,
+                                       help_text="FHIR Practitioner resource ID")
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     def __str__(self):
         return f"Dr. {self.user.get_full_name()} — {self.specialty}"
@@ -60,6 +74,13 @@ class PatientProfile(models.Model):
         ("A+", "A+"), ("A-", "A-"), ("B+", "B+"), ("B-", "B-"),
         ("AB+", "AB+"), ("AB-", "AB-"), ("O+", "O+"), ("O-", "O-")
     ))
+<<<<<<< HEAD
+=======
+    
+    # FHIR Integration Fields
+    fhir_resource_id = models.CharField(max_length=255, blank=True, null=True,
+                                       help_text="FHIR Patient resource ID")
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
     def __str__(self):
         return f"Patient: {self.user.get_full_name()}"
@@ -145,6 +166,7 @@ class AdvanceDirective(models.Model):
         return f"Advance directive — {self.patient.get_full_name()}"
 
 
+<<<<<<< HEAD
 class DoctorAvailability(models.Model):
     """Doctor's working hours for vacancy slot generation."""
     DAY_CHOICES = (
@@ -254,6 +276,65 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"[{self.get_appointment_type_display()}] {self.patient.get_full_name()} with Dr. {self.doctor.get_full_name()}"
+=======
+class Appointment(models.Model):
+    # FHIR-compliant status: proposed for consultation requests, booked for confirmed appointments
+    STATUS_CHOICES = (
+        ("proposed", "Proposed (Consultation Request)"),      # Patient requests consultation
+        ("requested", "Requested (Pending Doctor Review)"),   # Awaiting doctor confirmation
+        ("booked", "Booked (Confirmed)"),                      # Confirmed appointment
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    )
+    
+    CONSULTATION_TYPE_CHOICES = (
+        ("video", "Video Call"),
+        ("audio", "Audio Call"),
+        ("in-person", "In-Person"),
+        ("follow-up", "Follow-up"),
+        ("general", "General"),
+    )
+    
+    SYNC_STATUS_CHOICES = (
+        ("pending", "Pending FHIR Sync"),
+        ("synced", "Synced to FHIR"),
+        ("failed", "FHIR Sync Failed"),
+    )
+    
+    # Core appointment fields
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="appointments_as_patient",
+                                limit_choices_to={"role": "patient"})
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="appointments_as_doctor",
+                               limit_choices_to={"role": "doctor"}, null=True, blank=True)  # Can be NULL for open consultation requests
+    scheduled_at = models.DateTimeField(null=True, blank=True)  # Can be NULL for pending consultations
+    duration_minutes = models.IntegerField(default=30)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="proposed")
+    notes = models.TextField(blank=True)
+    
+    # Consultation-specific fields (used when status="proposed" or "requested")
+    consultation_type = models.CharField(max_length=20, choices=CONSULTATION_TYPE_CHOICES, 
+                                        default="general", blank=True)
+    reason = models.TextField(blank=True, help_text="Reason for consultation request")
+    meeting_link = models.URLField(blank=True, help_text="Meeting URL for virtual consultations")
+    
+    # FHIR Integration Fields
+    fhir_resource_id = models.CharField(max_length=255, blank=True, null=True, 
+                                       help_text="FHIR Appointment resource ID from FHIR server")
+    fhir_sync_status = models.CharField(max_length=20, choices=SYNC_STATUS_CHOICES, 
+                                       default="pending", help_text="Status of sync to FHIR server")
+    fhir_sync_error = models.TextField(blank=True, help_text="Error message if FHIR sync failed")
+    fhir_last_synced = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        status_label = "Consultation Request" if self.status in ["proposed", "requested"] else "Appointment"
+        return f"{status_label}: {self.patient.get_full_name()} with Dr. {self.doctor.get_full_name()}"
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 
 class Encounter(models.Model):
@@ -297,6 +378,7 @@ class Message(models.Model):
         return f"Message: {self.sender.email} → {self.recipient.email}"
 
 
+<<<<<<< HEAD
 class Consultation(models.Model):
     STATUS_CHOICES = (
         ("requested", "Requested"),
@@ -332,6 +414,8 @@ class Consultation(models.Model):
         return f"Consultation: {self.patient.get_full_name()} with Dr. {self.doctor.get_full_name()}"
 
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 # ────────────────────────────────────────────
 #  Prescriptions (FHIR MedicationRequest)
 # ────────────────────────────────────────────
@@ -383,7 +467,10 @@ class Prescription(models.Model):
 class LabResult(models.Model):
     TEST_STATUS_CHOICES = (
         ("pending", "Pending"),
+<<<<<<< HEAD
         ("in_progress", "In Progress"),
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
         ("completed", "Completed"),
         ("abnormal", "Abnormal"),
         ("reviewed", "Reviewed"),
@@ -401,12 +488,15 @@ class LabResult(models.Model):
     reference_range = models.CharField(max_length=150, blank=True)
     is_abnormal = models.BooleanField(default=False)
     interpretation = models.CharField(max_length=255, blank=True)  # "High", "Low", "Normal"
+<<<<<<< HEAD
     # Structured components for complex panels (CBC, metabolic panel, etc.)
     components = models.JSONField(blank=True, null=True, default=dict)
     # UI panel type / grouping (e.g., "CBC", "Metabolic", "Hepatic", "Renal", "Anapath")
     panel_type = models.CharField(max_length=50, blank=True)
     # Flag critical values that require immediate attention
     critical_flag = models.BooleanField(default=False)
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     notes = models.TextField(blank=True)
     ordered_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -760,7 +850,11 @@ class Notification(models.Model):
 
 
 # ────────────────────────────────────────────
+<<<<<<< HEAD
 #  Clinical Triage & Assessment
+=======
+#  Triage Score & Clinical Assessment
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 # ────────────────────────────────────────────
 
 class TriageScore(models.Model):

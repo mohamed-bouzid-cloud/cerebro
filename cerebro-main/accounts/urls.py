@@ -6,13 +6,19 @@ from . import fhir_views
 
 router = DefaultRouter()
 router.register(r'appointments', views.AppointmentViewSet, basename='appointment')
+<<<<<<< HEAD
 router.register(r'availability', views.DoctorAvailabilityViewSet, basename='availability')
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 router.register(r'fhir-appointments', fhir_views.FHIRAppointmentViewSet, basename='fhir-appointment')
 router.register(r'allergies', views.AllergyViewSet, basename='allergy')
 router.register(r'encounters', views.EncounterViewSet, basename='encounter')
 # Advanced features
 router.register(r'messages', views.MessageViewSet, basename='message')
+<<<<<<< HEAD
 router.register(r'consultations', views.ConsultationViewSet, basename='consultation')
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 router.register(r'prescriptions', views.PrescriptionViewSet, basename='prescription')
 router.register(r'lab-results', views.LabResultViewSet, basename='lab-result')
 router.register(r'vital-signs', views.VitalSignsViewSet, basename='vital-signs')
@@ -35,9 +41,12 @@ urlpatterns = [
     path("me/", views.UserProfileView.as_view(), name="auth-me"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     
+<<<<<<< HEAD
     # Patient information
     path("patients/<int:patient_id>/", views.PatientDetailView.as_view(), name="patient-detail"),
     
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     # Medical records
     path("medical-history/", views.MedicalHistoryView.as_view(), name="medical-history"),
     path("family-history/", views.FamilyHistoryView.as_view(), name="family-history"),
@@ -58,6 +67,10 @@ urlpatterns = [
     # FHIR Real-time Operations
     path("fhir/doctor-dashboard/", fhir_views.FHIRDoctorDashboardView.as_view(), name="fhir-doctor-dashboard"),
     
+<<<<<<< HEAD
     # Router URLs
+=======
+    # Router URLs (includes all registered viewsets)
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     path("", include(router.urls)),
 ]

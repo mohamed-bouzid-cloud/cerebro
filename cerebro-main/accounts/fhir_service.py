@@ -447,6 +447,7 @@ class FHIRService:
         
         return success, response
 
+<<<<<<< HEAD
     # ─────────────────────────────────────────────
     #  DiagnosticReport (Lab Results) Operations
     # ─────────────────────────────────────────────
@@ -517,6 +518,8 @@ class FHIRService:
             return True, fhir_id, response
         return False, "", response
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 
 # Global instance
 fhir_service = FHIRService()

@@ -47,7 +47,11 @@ const MedicationList = ({ prescriptions }) => {
     };
 
     return (
+<<<<<<< HEAD
         <div className="grid gap-5">
+=======
+        <div style={{ display: 'grid', gap: '16px' }}>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             {prescriptions?.length > 0 ? (
                 prescriptions.map((px, idx) => (
                     <motion.div
@@ -55,6 +59,7 @@ const MedicationList = ({ prescriptions }) => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
+<<<<<<< HEAD
                         className="glass-card rim-light p-6 flex justify-between items-center group relative overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -80,12 +85,50 @@ const MedicationList = ({ prescriptions }) => {
                                 </div>
                                 {px.notes && (
                                     <p className="text-[11px] font-bold text-gray-500 m-0 mt-3 pl-3 border-l-2 border-emerald-500/20 italic max-w-md">
+=======
+                        style={{
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '16px',
+                            padding: '20px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                            <div style={{
+                                width: '56px',
+                                height: '56px',
+                                background: 'rgba(16,185,129,0.1)',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#10b981'
+                            }}>
+                                <Pill size={28} />
+                            </div>
+                            <div>
+                                <h4 style={{ color: '#fff', fontSize: '18px', fontWeight: 600, margin: 0 }}>{px.medication_name}</h4>
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+                                    <span style={{ color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Clock size={14} /> {px.frequency}
+                                    </span>
+                                    <span style={{ color: '#888', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Info size={14} /> {px.dosage}
+                                    </span>
+                                </div>
+                                {px.notes && (
+                                    <p style={{ color: '#666', fontSize: '13px', margin: '8px 0 0 0', fontStyle: 'italic' }}>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                                         "{px.notes}"
                                     </p>
                                 )}
                             </div>
                         </div>
 
+<<<<<<< HEAD
                         <div className="flex flex-col items-end gap-3 relative z-10 text-right">
                             <button
                                 onClick={() => handleDownload(px)}
@@ -95,15 +138,52 @@ const MedicationList = ({ prescriptions }) => {
                             </button>
                             <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">
                                 EXP: {new Date(px.expiry_date).toLocaleDateString()}
+=======
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                            <button
+                                onClick={() => handleDownload(px)}
+                                style={{
+                                    background: 'rgba(59,130,246,0.1)',
+                                    color: '#3b82f6',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <Download size={16} />
+                                Download PDF
+                            </button>
+                            <span style={{
+                                color: '#10b981',
+                                background: 'rgba(16,185,129,0.1)',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                letterSpacing: '0.5px'
+                            }}>
+                                {px.status.toUpperCase()}
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                             </span>
                         </div>
                     </motion.div>
                 ))
             ) : (
+<<<<<<< HEAD
                 <div className="py-20 text-center glass-card rim-light !border-dashed opacity-30">
                     <Pill className="mx-auto text-gray-700 mb-4" size={40} />
                     <p className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-500">No Pharmacological Records</p>
                 </div>
+=======
+                <p style={{ color: '#888', textAlign: 'center', padding: '40px' }}>No active prescriptions.</p>
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
             )}
         </div>
     );

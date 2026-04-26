@@ -3,7 +3,11 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     User, DoctorProfile, PatientProfile, Allergy, MedicalHistory,
     FamilyHistory, Insurance, AdvanceDirective, Appointment, Encounter,
+<<<<<<< HEAD
     Message, Consultation, Prescription, LabResult, VitalSigns, MedicalDocument, Referral,
+=======
+    Message, Prescription, LabResult, VitalSigns, MedicalDocument, Referral,
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
     DICOMStudy, DICOMSeries, HL7Message, FHIRResourceLog
 )
 
@@ -113,6 +117,7 @@ class MessageAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
+<<<<<<< HEAD
 @admin.register(Consultation)
 class ConsultationAdmin(admin.ModelAdmin):
     list_display = ("patient", "doctor", "consultation_type", "status", "scheduled_at")
@@ -121,6 +126,8 @@ class ConsultationAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
+=======
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
 @admin.register(Prescription)
 class PrescriptionAdmin(admin.ModelAdmin):
     list_display = ("medication_name", "patient", "doctor", "status", "prescribed_at")

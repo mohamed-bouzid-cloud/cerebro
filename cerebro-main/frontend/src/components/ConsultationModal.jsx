@@ -35,25 +35,44 @@ const ConsultationModal = ({ isOpen, onClose, doctorId, doctorName, onSuccess })
         };
 
         try {
+<<<<<<< HEAD
             // Create consultation
             const consultationRes = await fetch('http://localhost:8000/api/auth/consultations/', {
+=======
+            // Create consultation request as FHIR Appointment with status="proposed"
+            const appointmentRes = await fetch('http://localhost:8000/api/auth/appointments/', {
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
                     doctor: parseInt(doctorId),
                     consultation_type: formData.consultation_type,
+<<<<<<< HEAD
                     reason: formData.reason
                 })
             });
 
             if (consultationRes.ok) {
                 const consultation = await consultationRes.json();
+=======
+                    reason: formData.reason,
+                    status: 'proposed'  // Consultation request status
+                })
+            });
+
+            if (appointmentRes.ok) {
+                const appointment = await appointmentRes.json();
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 alert('Consultation request sent successfully!');
                 setFormData({ consultation_type: 'video', reason: '' });
                 onClose();
                 onSuccess?.();
             } else {
+<<<<<<< HEAD
                 const errorData = await consultationRes.json();
+=======
+                const errorData = await appointmentRes.json();
+>>>>>>> b381c81bab0b6500d6e25aa0d8e664d8397d0550
                 setError(errorData.detail || JSON.stringify(errorData));
             }
         } catch (error) {

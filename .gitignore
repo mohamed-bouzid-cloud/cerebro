@@ -1,0 +1,47 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.log
+db.sqlite3
+*.sqlite3
+/venv/
+/env/
+/.venv/
+dist/
+build/
+*.egg-info/
+.eggs/
+.mypy_cache/
+.pytest_cache/
+
+# Django media & static collected
+/media/
+/staticfiles/
+
+# Node / React
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDEs & OS
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+secret_key.txt
